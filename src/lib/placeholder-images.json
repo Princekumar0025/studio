@@ -1,3 +1,58 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-image",
+      "description": "A physiotherapist assisting a patient with exercises.",
+      "imageUrl": "https://images.unsplash.com/photo-1764314484083-cbd0de7e512c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwaHlzaW90aGVyYXB5JTIwcGF0aWVudHxlbnwwfHx8fDE3Njg0NTQ1NDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "physiotherapy patient"
+    },
+    {
+      "id": "caleb-burgess",
+      "description": "Portrait of Dr. Caleb Burgess.",
+      "imageUrl": "https://images.unsplash.com/photo-1560250097-0b93528c311a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxkb2N0b3IlMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjgzOTg3NjZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "doctor portrait"
+    },
+    {
+      "id": "jane-doe",
+      "description": "Portrait of Dr. Jane Doe.",
+      "imageUrl": "https://images.unsplash.com/photo-1560250097-0b93528c311a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxkb2N0b3IlMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjgzOTg3NjZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "doctor portrait"
+    },
+    {
+      "id": "neck-stretches-guide",
+      "description": "Illustration of neck stretches.",
+      "imageUrl": "https://images.unsplash.com/photo-1632482151560-ef0645f32999?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxuZWNrJTIwc3RyZXRjaHxlbnwwfHx8fDE3Njg0NTg5MzV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "neck stretch"
+    },
+    {
+      "id": "back-pain-guide",
+      "description": "Illustration of exercises for back pain.",
+      "imageUrl": "https://images.unsplash.com/photo-1683587023194-a24e5b6549b0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxiYWNrJTIwZXhlcmNpc2V8ZW58MHx8fHwxNzY4NDcxMjU0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "back exercise"
+    },
+    {
+      "id": "knee-strengthening-guide",
+      "description": "Illustration of knee strengthening exercises.",
+      "imageUrl": "https://images.unsplash.com/photo-1763949391155-33111ea76d76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxrbmVlJTIwZXhlcmNpc2V8ZW58MHx8fHwxNzY4NDcxMjU0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "knee exercise"
+    },
+    {
+      "id": "service-1",
+      "description": "Person receiving manual therapy.",
+      "imageUrl": "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYW51YWwlMjB0aGVyYXB5fGVufDB8fHx8MTc2ODQ3MTI1NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "manual therapy"
+    },
+    {
+      "id": "service-2",
+      "description": "Athlete doing rehabilitation exercises.",
+      "imageUrl": "https://images.unsplash.com/photo-1759997725476-850059175ece?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzcG9ydHMlMjByZWhhYmlsaXRhdGlvbnxlbnwwfHx8fDE3Njg0NzEyNTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sports rehabilitation"
+    },
+    {
+      "id": "service-3",
+      "description": "Person having their posture assessed.",
+      "imageUrl": "https://images.unsplash.com/photo-1767611132085-167725b113ae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwb3N0dXJlJTIwY29ycmVjdGlvbnxlbnwwfHx8fDE3Njg0NzEyNTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "posture correction"
+    }
+  ]
 }
