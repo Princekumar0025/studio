@@ -78,7 +78,7 @@ service cloud.firestore {
        * @deny (get, list, update, delete) A user cannot read or modify an appointment after booking to protect PII.
        * @principle Implements a "write-only drop box" for user submissions.
        */
-      match /therapists/{therapistId}/appointments/{appointmentId} {
+      match /appointments/{appointmentId} {
         allow get, list, update, delete: if false;
         allow create: if true;
       }
@@ -114,7 +114,7 @@ service cloud.firestore {
        * @allow (create, update, delete) Only admins can manage treatment guides.
        * @principle Makes content publicly accessible while centralizing content management with admins.
        */
-      match /conditions/{conditionId}/treatmentGuides/{treatmentGuideId} {
+      match /treatmentGuides/{treatmentGuideId} {
         allow get, list: if true;
         allow create, update, delete: if isAdmin();
       }
@@ -143,5 +143,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
