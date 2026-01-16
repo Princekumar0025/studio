@@ -9,6 +9,7 @@
  *
  * Data Structure: The data is organized into logical top-level collections.
  * - /therapists: Publicly viewable therapist profiles.
+ * - /products: Publicly viewable product listings.
  * - /conditions: Publicly viewable medical condition information.
  * - /contactFormSubmissions: A private collection for contact form entries.
  * - /admins: A private list of user UIDs with administrator privileges.
@@ -20,7 +21,7 @@
  *   under the relevant condition.
  *
  * Key Security Decisions:
- * - Public Read-Only Content: The 'therapists', 'conditions', and 'treatmentGuides'
+ * - Public Read-Only Content: The 'therapists', 'products', 'conditions', and 'treatmentGuides'
  *   collections are world-readable to serve the app's informational purpose.
  *   Write operations are restricted to admins to ensure data integrity.
  * - Write-Only Drop Boxes: The 'appointments' and 'contactFormSubmissions'
@@ -82,6 +83,18 @@ service cloud.firestore {
         allow create: if true;
       }
     }
+    
+    /**
+     * @description Publicly readable product information for the store.
+     * @path /products/{productId}
+     * @allow (get, list) Any user, signed-in or not, can view products.
+     * @allow (create, update, delete) Only admins can manage products.
+     * @principle Makes content publicly accessible while centralizing content management with admins.
+     */
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
 
     /**
      * @description Publicly readable information about medical conditions.
@@ -130,3 +143,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

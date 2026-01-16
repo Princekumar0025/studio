@@ -6,22 +6,21 @@
       "type": "object",
       "description": "Represents a physiotherapy therapist.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the therapist."
-        },
         "name": {
           "type": "string",
           "description": "Therapist's full name."
+        },
+        "title": {
+          "type": "string",
+          "description": "Therapist's professional title."
         },
         "bio": {
           "type": "string",
           "description": "Biography of the therapist, including qualifications and specializations."
         },
-        "photoUrl": {
+        "imageId": {
           "type": "string",
-          "description": "URL to the therapist's profile photo.",
-          "format": "uri"
+          "description": "ID for the placeholder image."
         },
         "specializations": {
           "type": "array",
@@ -32,10 +31,40 @@
         }
       },
       "required": [
-        "id",
         "name",
+        "title",
         "bio",
-        "photoUrl"
+        "imageId",
+        "specializations"
+      ]
+    },
+    "Product": {
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a product sold in the e-commerce store.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the product."
+        },
+        "price": {
+          "type": "number",
+          "description": "Price of the product."
+        },
+        "imageId": {
+          "type": "string",
+          "description": "ID for the placeholder image."
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "price",
+        "imageId"
       ]
     },
     "Condition": {
@@ -233,6 +262,22 @@
         }
       },
       {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores product information for the e-commerce store.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "Unique identifier for the product."
+            }
+          ]
+        }
+      },
+      {
         "path": "/conditions/{conditionId}",
         "definition": {
           "entityName": "Condition",
@@ -324,3 +369,4 @@
     "reasoning": "The Firestore structure is designed to efficiently manage physiotherapy-related data while prioritizing security and scalability. It leverages path-based ownership and structural segregation to simplify security rules and ensure data integrity.  Therapist, Condition, and TreatmentGuide data are stored in root-level collections, intended to be globally available. Appointments are stored within a therapist's document for easy retrieval. ContactFormSubmissions are stored in a dedicated collection for review. A dedicated `admins` collection is used to manage user privileges for administrative tasks. \n\nAuthorization Independence is achieved by not relying on `get()` calls in security rules, except for checking admin status. Data requiring specific access controls (e.g., user-specific data, collaborative content) would need to denormalize authorization-related data into the documents themselves.\n\nThis structure supports QAPs by:\n\n*   Segregating data based on access requirements. Public data (Therapists, Conditions, TreatmentGuides) are stored separately from potentially private data (Appointments, ContactFormSubmissions).\n*   Leveraging path-based ownership for user-specific data, enabling secure list operations based on user ID.\n*   Providing a clear and secure mechanism for admin-level access control."
   }
 }
+    
