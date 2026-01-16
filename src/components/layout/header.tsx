@@ -3,10 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, Stethoscope, ShoppingCart } from "lucide-react";
-
+import { useAuth, useUser } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -17,6 +26,52 @@ const navLinks = [
   { href: "/symptom-checker", label: "Symptom Checker" },
   { href: "/contact", label: "Contact" },
 ];
+
+function UserNav() {
+  const { user } = useUser();
+  const auth = useAuth();
+
+  if (!user) {
+    return (
+      <Button asChild>
+        <Link href="/login">Login</Link>
+      </Button>
+    )
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
+            <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">{user.displayName}</p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {user.email}
+            </p>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+           <Link href="/admin/dashboard">Dashboard</Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => auth?.signOut()}>
+          Log out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+
+}
+
 
 export function Header() {
   const pathname = usePathname();
@@ -46,9 +101,7 @@ export function Header() {
           ))}
         </nav>
         <div className="flex flex-1 items-center justify-end gap-2">
-          <Button asChild>
-            <Link href="/book-appointment">Book Appointment</Link>
-          </Button>
+          <UserNav />
           <Button variant="outline" size="icon" asChild>
             <Link href="#">
               <ShoppingCart className="h-4 w-4" />

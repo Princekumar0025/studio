@@ -19,8 +19,11 @@ import {
   PanelLeft,
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { useUser } from '@/firebase';
+import React, { useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: Home },
@@ -49,12 +52,48 @@ function AdminHeader() {
   );
 }
 
+function AdminLoading() {
+    return (
+        <div className="flex min-h-screen">
+            <div className="hidden md:block w-64 p-4 border-r">
+                <Skeleton className="h-10 w-40 mb-8" />
+                <div className="space-y-4">
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                </div>
+            </div>
+            <div className="flex-1 p-6">
+                <Skeleton className="h-8 w-48 mb-6" />
+                <Skeleton className="h-64 w-full" />
+            </div>
+        </div>
+    )
+}
+
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading } = useUser();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+  
+  if (loading) {
+      return <AdminLoading />;
+  }
+
+  if (!user) {
+      return null;
+  }
 
   return (
     <SidebarProvider>

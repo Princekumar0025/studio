@@ -1,0 +1,89 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the application.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "photoURL": {
+          "type": "string",
+          "format": "uri",
+          "description": "The URL of the user's profile picture."
+        },
+        "role": {
+            "type": "string",
+            "enum": ["patient", "admin"],
+            "description": "The user's role."
+        }
+      },
+      "required": ["displayName", "email"]
+    },
+    "Doctor": {
+      "title": "Doctor",
+      "description": "A doctor or physiotherapist.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "title": { "type": "string" },
+        "specializations": { "type": "array", "items": { "type": "string" } },
+        "bio": { "type": "string" },
+        "imageId": { "type": "string" }
+      },
+      "required": ["name", "title", "bio"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "A product available in the store.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "imageId": { "type": "string" }
+      },
+      "required": ["name", "price"]
+    },
+    "Appointment": {
+        "title": "Appointment",
+        "description": "A booked appointment.",
+        "type": "object",
+        "properties": {
+            "userId": { "type": "string" },
+            "doctorId": { "type": "string" },
+            "date": { "type": "string", "format": "date-time" },
+            "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled"] }
+        },
+        "required": ["userId", "doctorId", "date", "status"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "facebook.com", "phone"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+        "schema": { "$ref": "#/entities/User" },
+        "description": "User profile data."
+    },
+    "/doctors/{doctorId}": {
+        "schema": { "$ref": "#/entities/Doctor" },
+        "description": "List of doctors."
+    },
+    "/products/{productId}": {
+        "schema": { "$ref": "#/entities/Product" },
+        "description": "List of store products."
+    },
+    "/appointments/{appointmentId}": {
+        "schema": { "$ref": "#/entities/Appointment" },
+        "description": "List of all appointments."
+    }
+  }
+}
