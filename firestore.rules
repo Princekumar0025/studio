@@ -2,80 +2,70 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Publicly readable collections, manageable by authenticated (admin) users
+    function isDeveloperAdmin() {
+      return request.auth != null && request.auth.uid == 'nvZWlJOeBHdojcfXC9ODKMJwky12';
+    }
+
     match /subscriptionPlans/{planId} {
       allow get, list: if true;
-      allow write: if request.auth != null;
+      allow write: if isDeveloperAdmin();
     }
 
     match /products/{productId} {
       allow get, list: if true;
-      allow write: if request.auth != null;
+      allow write: if isDeveloperAdmin();
     }
     
     match /conditions/{conditionId} {
       allow get, list: if true;
-      allow write: if request.auth != null;
+      allow write: if isDeveloperAdmin();
     }
 
     match /treatmentGuides/{guideId} {
       allow get, list: if true;
-      allow write: if request.auth != null;
+      allow write: if isDeveloperAdmin();
     }
 
-    // Contact Form: Writable by anyone, manageable by authenticated (admin) users
     match /contactFormSubmissions/{submissionId} {
       allow create: if true;
-      allow get, list: if request.auth != null;
+      allow get, list, delete: if isDeveloperAdmin();
       allow update: if false;
-      allow delete: if request.auth != null;
     }
 
-    // Therapists collection and subcollections
     match /therapists/{therapistId} {
       allow get, list: if true;
-      allow write: if request.auth != null;
+      allow write: if isDeveloperAdmin();
 
-      // Appointments can be created by anyone, but only viewed/managed by authenticated (admin) users
       match /appointments/{appointmentId} {
           allow create: if true;
-          allow get, list: if request.auth != null;
-          allow update, delete: if request.auth != null;
+          allow get, list, update, delete: if isDeveloperAdmin();
       }
       
-      // Availability is public to read, but only authenticated (admin) users can change it.
       match /availability/{date} {
           allow read: if true;
-          allow write: if request.auth != null;
+          allow write: if isDeveloperAdmin();
       }
     }
 
-    // User-specific data
     match /users/{userId} {
-        // A user can get/write their own doc, but not list other user docs.
         allow get, write: if request.auth != null && request.auth.uid == userId;
         allow list: if false; 
 
         match /subscriptions/{subscriptionId} {
-            // A user can get their own subscription. Admins can also get any subscription.
-            allow get: if request.auth != null && (request.auth.uid == userId || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+            allow get: if request.auth != null && (request.auth.uid == userId || isDeveloperAdmin());
             allow create: if request.auth != null && request.auth.uid == userId;
-            // Only admins can update or delete subscriptions.
-            allow update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-            // Listing is handled by the collection group query below.
+            allow update, delete: if isDeveloperAdmin();
             allow list: if false; 
         }
     }
 
-    // Admin collection group query for all subscriptions.
     match /{path=**}/subscriptions/{subscriptionId} {
-        allow list: if request.auth != null;
+        allow list: if isDeveloperAdmin();
     }
 
-    // Admin UID list: Read-only from client
+    // The admins collection is no longer used for rules and should not be client-accessible.
     match /admins/{userId} {
-      allow read: if true; 
-      allow write: if false;
+      allow read, write: if false;
     }
   }
 }

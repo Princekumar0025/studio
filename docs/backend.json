@@ -338,7 +338,9 @@
   },
   "auth": {
     "providers": [
-      "password"
+      "password",
+      "google.com",
+      "phone"
     ]
   },
   "firestore": {
