@@ -10,6 +10,7 @@
  * - /therapists: Publicly viewable therapist profiles.
  * - /products: Publicly viewable product listings.
  * - /conditions: Publicly viewable medical condition information.
+ * - /treatmentGuides: Publicly viewable treatment guides.
  * - /contactFormSubmissions: A collection for contact form entries, readable by admins.
  * - /admins: A private list of user UIDs with administrator privileges.
  *
@@ -20,10 +21,10 @@
  *   but manageable only by admins.
  *
  * Key Security Decisions:
- * - Public Read-Only Content: The 'therapists' and 'products'
+ * - Public Read-Only Content: The 'therapists', 'products', 'conditions', and 'treatmentGuides'
  *   collections are world-readable to serve the app's informational purpose.
  *   Write operations are restricted to admins to ensure data integrity.
- * - Admin-Managed Content: 'conditions', 'appointments', and therapist 'availability'
+ * - Admin-Managed Content: 'appointments', and therapist 'availability'
  *   are fully manageable by admins.
  * - Write-Only Drop Boxes: The 'appointments' and 'contactFormSubmissions'
  *   collections allow any user (including anonymous ones) to create documents.
@@ -118,6 +119,18 @@ service cloud.firestore {
     }
 
     /**
+     * @description Publicly readable treatment guides.
+     * @path /treatmentGuides/{guideId}
+     * @allow (get, list) Any user can view treatment guides.
+     * @allow (create, update, delete) Only admins can manage treatment guides.
+     * @principle Makes content publicly accessible while centralizing content management with admins.
+     */
+    match /treatmentGuides/{guideId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
      * @description Submissions from the website's contact form.
      * @path /contactFormSubmissions/{contactFormSubmissionId}
      * @allow (create) Any user can submit a message.
@@ -126,7 +139,7 @@ service cloud.firestore {
      * @principle Implements a "write-only drop box" for public users, with review capabilities for admins.
      */
     match /contactFormSubmissions/{contactFormSubmissionId} {
-      allow get, list, delete: if request.auth != null;
+      allow get, list, delete: if isAdmin();
       allow create: if true;
       allow update: if false;
     }
