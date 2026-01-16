@@ -40,12 +40,14 @@ export type Plan = {
   price: number;
   features: string[];
   isFeatured: boolean;
+  durationInDays: number;
 };
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   price: z.coerce.number().positive('Price must be a positive number.'),
+  durationInDays: z.coerce.number().int().positive('Duration must be a positive whole number.'),
   features: z.string().min(1, 'Please add at least one feature.'),
   isFeatured: z.boolean().default(false),
 });
@@ -74,6 +76,7 @@ export function PlanDialog({
       name: '',
       description: '',
       price: 0,
+      durationInDays: 30,
       features: '',
       isFeatured: false,
     },
@@ -86,6 +89,7 @@ export function PlanDialog({
           name: plan.name,
           description: plan.description,
           price: plan.price,
+          durationInDays: plan.durationInDays,
           features: plan.features.join('\n'),
           isFeatured: plan.isFeatured || false,
         });
@@ -94,6 +98,7 @@ export function PlanDialog({
           name: '',
           description: '',
           price: 0,
+          durationInDays: 30,
           features: '',
           isFeatured: false,
         });
@@ -173,19 +178,34 @@ export function PlanDialog({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Price (per month)</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="29.99" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+               <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Price (per month)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" placeholder="29.99" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="durationInDays"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duration (in days)</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="30" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="features"

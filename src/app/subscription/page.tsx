@@ -9,7 +9,7 @@ import {
   FirestorePermissionError,
   errorEmitter
 } from '@/firebase';
-import { collection, addDoc, serverTimestamp, query, where } from 'firebase/firestore';
+import { collection, addDoc, Timestamp, query } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, Star, Loader2 } from 'lucide-react';
@@ -26,12 +26,14 @@ type Plan = {
   price: number;
   features: string[];
   isFeatured: boolean;
+  durationInDays: number;
 };
 
 type UserSubscription = {
   id: string;
   planId: string;
   status: 'active' | 'cancelled';
+  endDate: Timestamp;
 }
 
 function PricingLoadingSkeleton() {
@@ -72,19 +74,22 @@ export default function SubscriptionPage() {
   
   const userSubscriptionsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'subscriptions'), 
-      where('status', '==', 'active')
-    );
+    return query(collection(firestore, 'users', user.uid, 'subscriptions'));
   }, [firestore, user]);
 
   const { data: userSubscriptions, isLoading: subscriptionsLoading } = useCollection<UserSubscription>(userSubscriptionsQuery);
 
   const activeSubscription = useMemo(() => {
-    if (userSubscriptions && userSubscriptions.length > 0) {
-      return userSubscriptions[0];
+    if (!userSubscriptions || userSubscriptions.length === 0) {
+      return null;
     }
-    return null;
+    // Find an active subscription that has not expired
+    const now = new Date();
+    return userSubscriptions.find(sub => 
+        sub.status === 'active' && 
+        sub.endDate && 
+        sub.endDate.toDate() > now
+    ) || null;
   }, [userSubscriptions]);
 
   const handleSubscribe = (plan: Plan) => {
@@ -97,6 +102,10 @@ export default function SubscriptionPage() {
 
     setIsSubscribing(plan.id);
 
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + plan.durationInDays);
+
     const subscriptionData = {
         userId: user.uid,
         userEmail: user.email,
@@ -104,7 +113,8 @@ export default function SubscriptionPage() {
         planName: plan.name,
         price: plan.price,
         status: 'active',
-        startDate: serverTimestamp(),
+        startDate: Timestamp.fromDate(startDate),
+        endDate: Timestamp.fromDate(endDate),
     };
 
     const newSubscriptionRef = collection(firestore, 'users', user.uid, 'subscriptions');
@@ -118,7 +128,11 @@ export default function SubscriptionPage() {
         const permissionError = new FirestorePermissionError({
             path: newSubscriptionRef.path,
             operation: 'create',
-            requestResourceData: subscriptionData
+            requestResourceData: {
+                ...subscriptionData,
+                startDate: 'SERVER_TIMESTAMP', // Represent server value for error logging
+                endDate: 'CALCULATED_TIMESTAMP'
+            }
         });
         errorEmitter.emit('permission-error', permissionError);
     }).finally(() => {
@@ -190,10 +204,10 @@ export default function SubscriptionPage() {
                             className="w-full" 
                             variant={isCurrentPlan ? "outline" : (plan.isFeatured ? "default" : "outline")}
                             onClick={() => handleSubscribe(plan)}
-                            disabled={isSubscribing !== null || (hasActiveSub && !isCurrentPlan)}
+                            disabled={isSubscribing !== null || (hasActiveSub)}
                         >
                         {isSubscribing === plan.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {isCurrentPlan ? "Manage Subscription" : (hasActiveSub ? "Plan Active" : "Get Started")}
+                        {isCurrentPlan ? "Your Active Plan" : (hasActiveSub ? "Plan Already Active" : "Get Started")}
                         </Button>
                     </CardFooter>
                     </Card>

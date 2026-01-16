@@ -24,6 +24,7 @@ type UserSubscription = {
   planName: string;
   status: 'active' | 'cancelled';
   startDate: Timestamp;
+  endDate: Timestamp;
   price: number;
 };
 
@@ -61,6 +62,16 @@ export default function SubscriptionsAdminPage() {
         setUpdatingStatus(null);
       });
   };
+
+  const getSubscriptionStatus = (sub: UserSubscription): 'active' | 'cancelled' | 'expired' => {
+    if (sub.status === 'cancelled') {
+      return 'cancelled';
+    }
+    if (sub.endDate && sub.endDate.toDate() < new Date()) {
+      return 'expired';
+    }
+    return 'active';
+  };
   
   const sortedSubscriptions = subscriptions?.sort((a,b) => b.startDate.toMillis() - a.startDate.toMillis());
 
@@ -82,6 +93,7 @@ export default function SubscriptionsAdminPage() {
                 <TableHead>Plan</TableHead>
                 <TableHead className="text-center">Status</TableHead>
                 <TableHead>Start Date</TableHead>
+                <TableHead>End Date</TableHead>
                 <TableHead className="text-right">Price</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -96,51 +108,59 @@ export default function SubscriptionsAdminPage() {
                     <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                     <TableCell className="text-center"><Skeleton className="h-6 w-20 mx-auto" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                     <TableCell className="text-right"><Skeleton className="h-5 w-16" /></TableCell>
                     <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                   </TableRow>
                 ))
               )}
               {!isLoading && sortedSubscriptions && sortedSubscriptions.length > 0 ? (
-                sortedSubscriptions.map((sub) => (
-                  <TableRow key={sub.id}>
-                    <TableCell className="font-medium">{sub.userEmail}</TableCell>
-                    <TableCell className="text-muted-foreground">{sub.planName}</TableCell>
-                    <TableCell className="text-center">
-                        <Badge variant={sub.status === 'active' ? 'default' : 'destructive'} className={cn("capitalize", sub.status === 'active' && "bg-green-600")}>
-                            {sub.status}
-                        </Badge>
-                    </TableCell>
-                    <TableCell>{format(sub.startDate.toDate(), 'PPP')}</TableCell>
-                    <TableCell className="text-right">${sub.price.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <div className="flex justify-end">
-                        {updatingStatus === sub.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                <Button aria-haspopup="true" size="icon" variant="ghost">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Toggle menu</span>
-                                </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Change Status</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleStatusChange(sub, 'active')} disabled={sub.status === 'active'}>Set to Active</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleStatusChange(sub, 'cancelled')} disabled={sub.status === 'cancelled'} className="text-destructive">Set to Cancelled</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                sortedSubscriptions.map((sub) => {
+                  const status = getSubscriptionStatus(sub);
+                  return (
+                    <TableRow key={sub.id}>
+                      <TableCell className="font-medium">{sub.userEmail}</TableCell>
+                      <TableCell className="text-muted-foreground">{sub.planName}</TableCell>
+                      <TableCell className="text-center">
+                          <Badge 
+                            variant={status === 'active' ? 'default' : (status === 'expired' ? 'secondary' : 'destructive')} 
+                            className={cn("capitalize", status === 'active' && "bg-green-600")}
+                          >
+                              {status}
+                          </Badge>
+                      </TableCell>
+                      <TableCell>{format(sub.startDate.toDate(), 'PPP')}</TableCell>
+                      <TableCell>{sub.endDate ? format(sub.endDate.toDate(), 'PPP') : 'Never'}</TableCell>
+                      <TableCell className="text-right">${sub.price.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <div className="flex justify-end">
+                          {updatingStatus === sub.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                              <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                  <Button aria-haspopup="true" size="icon" variant="ghost" disabled={status === 'expired'}>
+                                      <MoreHorizontal className="h-4 w-4" />
+                                      <span className="sr-only">Toggle menu</span>
+                                  </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Change Status</DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => handleStatusChange(sub, 'active')} disabled={sub.status === 'active'}>Set to Active</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleStatusChange(sub, 'cancelled')} disabled={sub.status === 'cancelled'} className="text-destructive">Set to Cancelled</DropdownMenuItem>
+                                  </DropdownMenuContent>
+                              </DropdownMenu>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
               ) : (
                 !isLoading && (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={7} className="h-24 text-center">
                       No patient subscriptions found.
                     </TableCell>
                   </TableRow>

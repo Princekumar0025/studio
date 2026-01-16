@@ -61,6 +61,8 @@ function PlansList() {
         setPlanToDelete(null);
       });
   };
+  
+  const sortedPlans = plans?.sort((a,b) => a.price - b.price);
 
   return (
     <>
@@ -82,6 +84,7 @@ function PlansList() {
               <TableRow>
                 <TableHead>Plan Name</TableHead>
                 <TableHead>Price</TableHead>
+                <TableHead>Duration</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead className="text-center">Featured</TableHead>
                 <TableHead>
@@ -95,17 +98,19 @@ function PlansList() {
                   <TableRow key={i}>
                     <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-64" /></TableCell>
                     <TableCell className="text-center"><Skeleton className="h-5 w-5 mx-auto" /></TableCell>
                     <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                   </TableRow>
                 ))
               )}
-              {!isLoading && plans && plans.length > 0 ? (
-                plans.map((plan) => (
+              {!isLoading && sortedPlans && sortedPlans.length > 0 ? (
+                sortedPlans.map((plan) => (
                   <TableRow key={plan.id}>
                     <TableCell className="font-medium">{plan.name}</TableCell>
                     <TableCell>${plan.price.toFixed(2)}</TableCell>
+                    <TableCell>{plan.durationInDays} days</TableCell>
                     <TableCell className="text-muted-foreground">{plan.description}</TableCell>
                     <TableCell className="text-center">
                         {plan.isFeatured ? <CheckCircle className="h-5 w-5 text-green-500 mx-auto" /> : <XCircle className="h-5 w-5 text-muted-foreground mx-auto" />}
@@ -130,7 +135,7 @@ function PlansList() {
               ) : (
                 !isLoading && (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
+                    <TableCell colSpan={6} className="h-24 text-center">
                       No plans created yet.
                     </TableCell>
                   </TableRow>
