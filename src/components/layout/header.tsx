@@ -16,19 +16,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/conditions", label: "Conditions" },
-  { href: "/guides", label: "Treatment Guides" },
-  { href: "/team", label: "Our Team" },
-  { href: "/store", label: "Store" },
-  { href: "/contact", label: "Contact" },
-];
+import { Skeleton } from "@/components/ui/skeleton";
 
 function UserNav() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const auth = useAuth();
+
+  if (isUserLoading) {
+    return <Skeleton className="h-8 w-8 rounded-full" />;
+  }
 
   if (!user) {
     return (
@@ -73,6 +69,14 @@ function UserNav() {
 
 
 export function Header() {
+  const navLinks = [
+    { href: "/", label: "Home" },
+    { href: "/conditions", label: "Conditions" },
+    { href: "/guides", label: "Treatment Guides" },
+    { href: "/team", label: "Our Team" },
+    { href: "/store", label: "Store" },
+    { href: "/contact", label: "Contact" },
+  ];
   const pathname = usePathname();
 
   const NavLink = ({ href, label }: { href: string; label: string }) => (
