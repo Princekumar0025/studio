@@ -36,6 +36,7 @@ export function Footer() {
             <Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">Contact Us</Link>
             <Link href="/book-appointment" className="text-sm text-muted-foreground hover:text-primary transition-colors">Book an Appointment</Link>
             <Link href="/symptom-checker" className="text-sm text-muted-foreground hover:text-primary transition-colors">Symptom Checker</Link>
+            <Link href="/admin" className="text-sm text-muted-foreground hover:text-primary transition-colors">Admin</Link>
           </div>
         </div>
         <div className="mt-8 border-t pt-4 text-center text-sm text-muted-foreground">
