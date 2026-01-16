@@ -3,8 +3,9 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      // Switched to get() for robust checking, as exists() was failing.
-      return request.auth != null && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data != null;
+      // Use exists() for robust checking. get() fails when a doc doesn't exist,
+      // making it unsuitable for existence checks.
+      return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     // Publicly readable collections, manageable by admins
@@ -77,7 +78,7 @@ service cloud.firestore {
 
     // Admin UID list: Read-only from client
     match /admins/{userId} {
-      allow read: if true; // `get()` in rules requires this to be readable
+      allow read: if true; // `exists()` and `get()` in rules require this to be readable
       allow write: if false;
     }
   }
