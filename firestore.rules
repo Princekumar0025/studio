@@ -134,13 +134,13 @@ service cloud.firestore {
     /**
      * @description Stores a list of admin user UIDs.
      * @path /admins/{userId}
-     * @allow (get) Any authenticated user can check if a specific user is an admin. This is required for the isAdmin() function to work reliably.
+     * @allow (get) Any authenticated user can check if they themselves are an admin. This is required for the isAdmin() function to work reliably across the ruleset.
      * @allow (list) DISALLOWED for all users to prevent enumeration of admins.
      * @allow (write) Only existing admins can modify the admin list.
-     * @principle Secures admin management while allowing for a reliable permission check.
+     * @principle Secures admin management by only allowing users to check their own status, while letting other admins manage the list.
      */
     match /admins/{userId} {
-        allow get: if request.auth != null;
+        allow get: if request.auth != null && request.auth.uid == userId;
         allow list: if false; // Explicitly deny listing all admins
         allow write: if isAdmin();
     }
