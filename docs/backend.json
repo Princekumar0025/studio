@@ -193,12 +193,24 @@
         "message",
         "submissionDateTime"
       ]
+    },
+    "Admin": {
+      "title": "Admin",
+      "type": "object",
+      "description": "Represents an administrator user. The existence of a document in the /admins collection with a user's UID as the document ID confers admin privileges.",
+      "properties": {
+        "addedOn": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the user was made an admin."
+        }
+      },
+      "required": ["addedOn"]
     }
   },
   "auth": {
     "providers": [
       "google.com",
-      "facebook.com",
       "phone"
     ]
   },
@@ -291,8 +303,24 @@
             }
           ]
         }
+      },
+      {
+        "path": "/admins/{userId}",
+        "definition": {
+          "entityName": "Admin",
+          "schema": {
+            "$ref": "#/backend/entities/Admin"
+          },
+          "description": "Stores a list of user UIDs that have admin privileges. The existence of a document grants admin rights.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The user's UID."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to efficiently manage physiotherapy-related data while prioritizing security and scalability. It leverages path-based ownership and structural segregation to simplify security rules and ensure data integrity.  Therapist, Condition, and TreatmentGuide data are stored in root-level collections, intended to be globally available. Appointments are stored within a therapist's document for easy retrieval. ContactFormSubmissions are stored in a dedicated collection for review. \n\nAuthorization Independence is achieved by not relying on `get()` calls in security rules. Data requiring specific access controls (e.g., user-specific data, collaborative content) would need to denormalize authorization-related data into the documents themselves.\n\nThis structure supports QAPs by:\n\n*   Segregating data based on access requirements. Public data (Therapists, Conditions, TreatmentGuides) are stored separately from potentially private data (Appointments, ContactFormSubmissions).\n*   Leveraging path-based ownership for user-specific data, enabling secure list operations based on user ID."
+    "reasoning": "The Firestore structure is designed to efficiently manage physiotherapy-related data while prioritizing security and scalability. It leverages path-based ownership and structural segregation to simplify security rules and ensure data integrity.  Therapist, Condition, and TreatmentGuide data are stored in root-level collections, intended to be globally available. Appointments are stored within a therapist's document for easy retrieval. ContactFormSubmissions are stored in a dedicated collection for review. A dedicated `admins` collection is used to manage user privileges for administrative tasks. \n\nAuthorization Independence is achieved by not relying on `get()` calls in security rules, except for checking admin status. Data requiring specific access controls (e.g., user-specific data, collaborative content) would need to denormalize authorization-related data into the documents themselves.\n\nThis structure supports QAPs by:\n\n*   Segregating data based on access requirements. Public data (Therapists, Conditions, TreatmentGuides) are stored separately from potentially private data (Appointments, ContactFormSubmissions).\n*   Leveraging path-based ownership for user-specific data, enabling secure list operations based on user ID.\n*   Providing a clear and secure mechanism for admin-level access control."
   }
 }

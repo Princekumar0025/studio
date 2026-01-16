@@ -11,6 +11,7 @@
  * - /therapists: Publicly viewable therapist profiles.
  * - /conditions: Publicly viewable medical condition information.
  * - /contactFormSubmissions: A private collection for contact form entries.
+ * - /admins: A private list of user UIDs with administrator privileges.
  *
  * Subcollections are used to establish clear relationships:
  * - /therapists/{therapistId}/appointments: Appointments are nested under the
@@ -21,15 +22,15 @@
  * Key Security Decisions:
  * - Public Read-Only Content: The 'therapists', 'conditions', and 'treatmentGuides'
  *   collections are world-readable to serve the app's informational purpose.
- *   All client-side write operations are disabled to ensure data integrity,
- *   reserving these operations for a trusted admin backend.
+ *   Write operations are restricted to admins to ensure data integrity.
  * - Write-Only Drop Boxes: The 'appointments' and 'contactFormSubmissions'
  *   collections allow any user (including anonymous ones) to create documents.
  *   However, all read and modification access is denied to prevent users from
  *   viewing or altering other users' sensitive information.
- * - No User-Specific Data Trees: This model does not include a '/users/{userId}'
- *   collection, as the primary features do not involve user accounts managing
- *   their own persistent data.
+ * - Admin Role Management: An '/admins' collection stores the UIDs of admin users.
+ *   The `isAdmin()` function checks for the existence of the requesting user's UID
+ *   in this collection. Admins can manage the list of other admins. The first admin
+ *   must be added manually through the Firebase Console.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -47,68 +48,62 @@ service cloud.firestore {
     }
 
     /**
-     * Placeholder for admin role checks. In this secure-by-default model,
-     * this is always false for client-side requests. Administrative tasks
-     * should be handled by a trusted server environment.
+     * Returns true if the user's UID is in the /admins collection.
+     * This is the sole mechanism for granting administrative privileges.
      */
     function isAdmin() {
-      return false;
+      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
+
+    // -------------------------------------------------------------------------
+    // Collection Rules
+    // -------------------------------------------------------------------------
 
     /**
      * @description Publicly readable information about therapists.
      * @path /therapists/{therapistId}
-     * @allow (get) Any user, signed-in or not, can view a therapist's profile.
-     * @deny (create) A client is not allowed to add a new therapist. This is an admin task.
-     * @principle Makes content publicly accessible while centralizing content management.
+     * @allow (get, list) Any user, signed-in or not, can view a therapist's profile.
+     * @allow (create, update, delete) Only admins can manage therapist profiles.
+     * @principle Makes content publicly accessible while centralizing content management with admins.
      */
     match /therapists/{therapistId} {
       allow get, list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create, update, delete: if isAdmin();
 
       /**
        * @description Appointments for a specific therapist.
        * @path /therapists/{therapistId}/appointments/{appointmentId}
        * @allow (create) Any user, signed-in or not, can create an appointment.
-       * @deny (get) A user cannot read an appointment after booking to protect PII.
+       * @deny (get, list, update, delete) A user cannot read or modify an appointment after booking to protect PII.
        * @principle Implements a "write-only drop box" for user submissions.
        */
       match /therapists/{therapistId}/appointments/{appointmentId} {
-        allow get: if false;
-        allow list: if false;
+        allow get, list, update, delete: if false;
         allow create: if true;
-        allow update: if false;
-        allow delete: if false;
       }
     }
 
     /**
      * @description Publicly readable information about medical conditions.
      * @path /conditions/{conditionId}
-     * @allow (list) Any user, signed-in or not, can list all available conditions.
-     * @deny (update) A client is not allowed to modify a condition. This is an admin task.
-     * @principle Makes content publicly accessible while centralizing content management.
+     * @allow (get, list) Any user can list all available conditions.
+     * @allow (create, update, delete) Only admins can manage condition information.
+     * @principle Makes content publicly accessible while centralizing content management with admins.
      */
     match /conditions/{conditionId} {
       allow get, list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create, update, delete: if isAdmin();
 
       /**
        * @description Publicly readable treatment guides for a specific condition.
        * @path /conditions/{conditionId}/treatmentGuides/{treatmentGuideId}
-       * @allow (get) Any user, signed-in or not, can view a specific treatment guide.
-       * @deny (delete) A client is not allowed to delete a guide. This is an admin task.
-       * @principle Makes content publicly accessible while centralizing content management.
+       * @allow (get, list) Any user can view a specific treatment guide.
+       * @allow (create, update, delete) Only admins can manage treatment guides.
+       * @principle Makes content publicly accessible while centralizing content management with admins.
        */
       match /conditions/{conditionId}/treatmentGuides/{treatmentGuideId} {
         allow get, list: if true;
-        allow create: if false;
-        allow update: if false;
-        allow delete: if false;
+        allow create, update, delete: if isAdmin();
       }
     }
 
@@ -116,15 +111,22 @@ service cloud.firestore {
      * @description Submissions from the website's contact form.
      * @path /contactFormSubmissions/{contactFormSubmissionId}
      * @allow (create) Any user, signed-in or not, can submit a message.
-     * @deny (list) Users cannot list all submissions to protect the privacy of others.
+     * @deny (get, list, update, delete) Users cannot read or modify submissions to protect the privacy of others.
      * @principle Implements a "write-only drop box" for user submissions.
      */
     match /contactFormSubmissions/{contactFormSubmissionId} {
-      allow get: if false;
-      allow list: if false;
+      allow get, list, update, delete: if false;
       allow create: if true;
-      allow update: if false;
-      allow delete: if false;
+    }
+
+    /**
+     * @description Stores a list of admin user UIDs.
+     * @path /admins/{userId}
+     * @allow (get, list, write) Only admins can read or write to the admins collection.
+     * @principle Restricts management of admin privileges to other admins. The first admin must be added via Firebase Console.
+     */
+    match /admins/{userId} {
+        allow get, list, write: if isAdmin();
     }
   }
 }
