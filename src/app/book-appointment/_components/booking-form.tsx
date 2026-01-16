@@ -1,12 +1,25 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
+import {
+  useFirestore,
+  useCollection,
+  useDoc,
+  useMemoFirebase,
+  errorEmitter,
+  FirestorePermissionError,
+} from '@/firebase';
+import {
+  collection,
+  doc,
+  addDoc,
+} from 'firebase/firestore';
 
-import { therapists } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,21 +46,23 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from '@/components/ui/skeleton';
 
+type Therapist = { id: string; name: string };
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email." }),
   phone: z.string().min(10, { message: "Please enter a valid phone number." }),
-  therapist: z.string().nonempty({ message: "Please select a therapist." }),
+  therapistId: z.string().nonempty({ message: "Please select a therapist." }),
   date: z.date({ required_error: "A date is required." }),
   time: z.string().nonempty({ message: "Please select a time." }),
 });
 
-const availableTimes = ["09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM"];
-
 export function BookingForm() {
   const { toast } = useToast();
+  const firestore = useFirestore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -55,16 +70,70 @@ export function BookingForm() {
       name: "",
       email: "",
       phone: "",
+      therapistId: "",
+      time: "",
     },
   });
 
+  const selectedTherapistId = form.watch('therapistId');
+  const selectedDate = form.watch('date');
+
+  const therapistsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'therapists') : null, [firestore]);
+  const { data: therapists, isLoading: therapistsLoading } = useCollection<Therapist>(therapistsCollection);
+  
+  const formattedDate = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null;
+
+  const availabilityDocRef = useMemoFirebase(() => {
+    if (!firestore || !selectedTherapistId || !formattedDate) return null;
+    return doc(firestore, 'therapists', selectedTherapistId, 'availability', formattedDate);
+  }, [firestore, selectedTherapistId, formattedDate]);
+
+  const { data: availabilityData, isLoading: availabilityLoading } = useDoc<{timeSlots: string[]}>(availabilityDocRef);
+  const availableTimes = availabilityData?.timeSlots?.sort() || [];
+
+  // Reset time when date or therapist changes
+  useEffect(() => {
+    form.resetField('time');
+  }, [selectedDate, selectedTherapistId, form]);
+
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Booking Submitted:", values);
-    toast({
-      title: "Appointment Requested!",
-      description: `We've received your request for an appointment on ${format(values.date, "PPP")} at ${values.time}. We will contact you shortly to confirm.`,
-    });
-    form.reset();
+    if (!firestore) return;
+
+    setIsSubmitting(true);
+    const [hours, minutes] = values.time.split(':').map(Number);
+    const appointmentDateTime = new Date(values.date);
+    appointmentDateTime.setHours(hours, minutes, 0, 0);
+
+    const appointmentsCollection = collection(firestore, 'therapists', values.therapistId, 'appointments');
+    const newAppointment = {
+      patientName: values.name,
+      email: values.email,
+      phoneNumber: values.phone,
+      appointmentDateTime: appointmentDateTime.toISOString(),
+      therapistId: values.therapistId,
+      status: 'pending',
+    };
+
+    addDoc(appointmentsCollection, newAppointment)
+      .then(() => {
+        toast({
+          title: "Appointment Requested!",
+          description: `We've received your request for an appointment on ${format(values.date, "PPP")} at ${values.time}. We will contact you shortly to confirm.`,
+        });
+        form.reset();
+      })
+      .catch(error => {
+        const permissionError = new FirestorePermissionError({
+          path: appointmentsCollection.path,
+          operation: 'create',
+          requestResourceData: newAppointment,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   }
 
   return (
@@ -115,19 +184,19 @@ export function BookingForm() {
             />
             <FormField
               control={form.control}
-              name="therapist"
+              name="therapistId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Therapist</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={therapistsLoading}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a therapist" />
+                        <SelectValue placeholder={therapistsLoading ? "Loading doctors..." : "Select a therapist"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {therapists.map(therapist => (
-                        <SelectItem key={therapist.id} value={therapist.name}>{therapist.name}</SelectItem>
+                      {therapists?.map(therapist => (
+                        <SelectItem key={therapist.id} value={therapist.id}>{therapist.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -183,16 +252,20 @@ export function BookingForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Time</FormLabel>
-                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                     <Select onValueChange={field.onChange} value={field.value} disabled={!selectedTherapistId || !selectedDate || availabilityLoading}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a time" />
+                          <SelectValue placeholder={availabilityLoading ? "Loading times..." : "Select a time"} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {availableTimes.map(time => (
-                          <SelectItem key={time} value={time}>{time}</SelectItem>
-                        ))}
+                        {!availabilityLoading && availableTimes.length > 0 ? (
+                           availableTimes.map(time => (
+                            <SelectItem key={time} value={time}>{format(new Date(`1970-01-01T${time}`), 'p')}</SelectItem>
+                          ))
+                        ) : (
+                          <div className="text-center text-sm text-muted-foreground p-4">No available times.</div>
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -200,10 +273,15 @@ export function BookingForm() {
                 )}
               />
             </div>
-            <Button type="submit" className="w-full" size="lg">Request Appointment</Button>
+            <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Request Appointment
+            </Button>
           </form>
         </Form>
       </CardContent>
     </Card>
   );
 }
+
+    

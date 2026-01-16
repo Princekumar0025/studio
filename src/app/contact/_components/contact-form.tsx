@@ -3,6 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import {
+  useFirestore,
+  errorEmitter,
+  FirestorePermissionError,
+} from '@/firebase';
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +34,7 @@ const formSchema = z.object({
 
 export function ContactForm() {
   const { toast } = useToast();
+  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -39,12 +47,34 @@ export function ContactForm() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Contact Form Submitted:", values);
-    toast({
-      title: "Message Sent!",
-      description: "Thank you for contacting us. We'll get back to you shortly.",
-    });
-    form.reset();
+    if (!firestore) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Database not available.'});
+      return;
+    }
+
+    const submissionData = {
+      ...values,
+      submittedAt: serverTimestamp(),
+    };
+
+    const submissionsCollection = collection(firestore, 'contactFormSubmissions');
+
+    addDoc(submissionsCollection, submissionData)
+      .then(() => {
+        toast({
+          title: "Message Sent!",
+          description: "Thank you for contacting us. We'll get back to you shortly.",
+        });
+        form.reset();
+      })
+      .catch((error) => {
+         const permissionError = new FirestorePermissionError({
+            path: submissionsCollection.path,
+            operation: 'create',
+            requestResourceData: values,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   }
 
   return (
@@ -113,10 +143,14 @@ export function ContactForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" size="lg">Send Message</Button>
+            <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? 'Sending...' : 'Send Message'}
+            </Button>
           </form>
         </Form>
       </CardContent>
     </Card>
   );
 }
+
+    
