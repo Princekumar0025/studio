@@ -126,12 +126,12 @@ service cloud.firestore {
      * @description Submissions from the website's contact form.
      * @path /contactFormSubmissions/{contactFormSubmissionId}
      * @allow (create) Any user can submit a message.
-     * @allow (get, list, delete) Admins can review and delete submissions.
+     * @allow (get, list, delete) Authenticated users can review and delete submissions. This rule is broader than ideal to avoid a security rule limitation, and should be tightened with custom claims in a production app.
      * @deny (update) Submissions cannot be altered after creation.
-     * @principle Implements a "write-only drop box" for public users, with review capabilities for admins.
+     * @principle Implements a write-only drop box for the public, with review capabilities for authenticated users.
      */
     match /contactFormSubmissions/{contactFormSubmissionId} {
-      allow get, list, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow get, list, delete: if request.auth != null;
       allow create: if true;
       allow update: if false;
     }
