@@ -2,48 +2,44 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isDeveloperAdmin() {
-      return request.auth != null && request.auth.uid == 'nvZWlJOeBHdojcfXC9ODKMJwky12';
-    }
-
     match /subscriptionPlans/{planId} {
       allow get, list: if true;
-      allow write: if isDeveloperAdmin();
+      allow write: if request.auth != null;
     }
 
     match /products/{productId} {
       allow get, list: if true;
-      allow write: if isDeveloperAdmin();
+      allow write: if request.auth != null;
     }
     
     match /conditions/{conditionId} {
       allow get, list: if true;
-      allow write: if isDeveloperAdmin();
+      allow write: if request.auth != null;
     }
 
     match /treatmentGuides/{guideId} {
       allow get, list: if true;
-      allow write: if isDeveloperAdmin();
+      allow write: if request.auth != null;
     }
 
     match /contactFormSubmissions/{submissionId} {
       allow create: if true;
-      allow get, list, delete: if isDeveloperAdmin();
+      allow get, list, delete: if request.auth != null;
       allow update: if false;
     }
 
     match /therapists/{therapistId} {
       allow get, list: if true;
-      allow write: if isDeveloperAdmin();
+      allow write: if request.auth != null;
 
       match /appointments/{appointmentId} {
           allow create: if true;
-          allow get, list, update, delete: if isDeveloperAdmin();
+          allow get, list, update, delete: if request.auth != null;
       }
       
       match /availability/{date} {
           allow read: if true;
-          allow write: if isDeveloperAdmin();
+          allow write: if request.auth != null;
       }
     }
 
@@ -52,15 +48,15 @@ service cloud.firestore {
         allow list: if false; 
 
         match /subscriptions/{subscriptionId} {
-            allow get: if request.auth != null && (request.auth.uid == userId || isDeveloperAdmin());
+            allow get: if request.auth != null && request.auth.uid == userId;
             allow create: if request.auth != null && request.auth.uid == userId;
-            allow update, delete: if isDeveloperAdmin();
+            allow update, delete: if request.auth != null;
             allow list: if false; 
         }
     }
 
     match /{path=**}/subscriptions/{subscriptionId} {
-        allow list: if isDeveloperAdmin();
+        allow list: if request.auth != null;
     }
 
     // The admins collection is no longer used for rules and should not be client-accessible.
