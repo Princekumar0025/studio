@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FcGoogle } from 'react-icons/fc';
 import { FaFacebook } from 'react-icons/fa';
 import { Phone } from 'lucide-react';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 // Attaching verifier to window to ensure it's a singleton and survives re-renders.
@@ -32,6 +32,16 @@ export default function LoginPage() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const recaptchaContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // Effect for cleaning up reCAPTCHA on unmount
+  useEffect(() => {
+    return () => {
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+      }
+    };
+  }, []);
+
+
   const handleSignInSuccess = () => {
     setIsSigningIn(false);
     router.push('/admin/dashboard');
@@ -39,38 +49,36 @@ export default function LoginPage() {
 
   const handleSignInError = (error: any, provider: string) => {
     setIsSigningIn(false);
-    // Log the full error for debugging
     console.error(`Error signing in with ${provider}:`, error);
     
-    let description = `An unknown error occurred. Please try again. (Code: ${error.code})`;
+    let description = `An unknown error occurred. Please try again.`;
     switch(error.code) {
         case 'auth/popup-closed-by-user':
-            description = 'The sign-in window was closed. Please try again.';
+            description = 'The sign-in window was closed before completing. Please try again.';
             break;
         case 'auth/popup-blocked':
-            description = 'Sign-in pop-up was blocked. Please allow pop-ups for this site.';
+            description = 'Sign-in pop-up was blocked by the browser. Please allow pop-ups for this site and try again.';
             break;
         case 'auth/account-exists-with-different-credential':
-            description = 'An account already exists with this email using a different sign-in method.';
+            description = 'An account already exists with this email address. Please sign in using the method you originally used.';
             break;
         case 'auth/operation-not-allowed':
-             description = `Sign-in with ${provider} is not enabled in the project configuration.`;
+             description = `Sign-in with ${provider} is not enabled. Please go to your Firebase Console -> Authentication -> Sign-in method, and enable the ${provider} provider.`;
              break;
         case 'auth/invalid-phone-number':
-            description = 'The phone number you entered is not valid. Please include the country code (e.g., +1).';
+            description = 'The phone number you entered is not valid. Please make sure to include the country code (e.g., +1).';
             break;
         case 'auth/too-many-requests':
-            description = 'We have blocked all requests from this device due to unusual activity. Try again later.';
+            description = 'We have blocked all requests from this device due to unusual activity. Please try again later.';
             break;
         case 'auth/invalid-verification-code':
-            description = 'The verification code is incorrect. Please try again.';
+            description = 'The verification code is incorrect. Please double-check the code and try again.';
             break;
         case 'auth/network-request-failed':
             description = 'A network error occurred. Please check your internet connection and try again.';
             break;
         default:
-            // The default description will now include the error code and message
-            description = `An unexpected error occurred: ${error.message} (Code: ${error.code || 'N/A'})`;
+            description = `An unexpected error occurred. Please check the console for details. (Code: ${error.code || 'N/A'})`;
             break;
     }
 
@@ -78,17 +86,18 @@ export default function LoginPage() {
       variant: 'destructive',
       title: 'Authentication Failed',
       description: description,
+      duration: 9000,
     });
   };
 
-  const signInWithProvider = async (provider: GoogleAuthProvider | FacebookAuthProvider) => {
+  const signInWithProvider = async (providerInstance: GoogleAuthProvider | FacebookAuthProvider) => {
     if (!auth || isSigningIn) return;
     setIsSigningIn(true);
     try {
-      await signInWithPopup(auth, provider);
+      await signInWithPopup(auth, providerInstance);
       handleSignInSuccess();
     } catch (error) {
-      const providerName = provider.providerId.includes('google') ? 'Google' : 'Facebook';
+      const providerName = providerInstance.providerId.includes('google') ? 'Google' : 'Facebook';
       handleSignInError(error, providerName);
     }
   };
@@ -99,32 +108,32 @@ export default function LoginPage() {
   const handlePhoneSignIn = async () => {
     if (!auth || isSigningIn) return;
     setIsSigningIn(true);
+  
+    // Clear previous verifier instance
+    if (window.recaptchaVerifier) {
+      window.recaptchaVerifier.clear();
+      window.recaptchaVerifier = undefined;
+    }
 
     try {
-      // Initialize reCAPTCHA only when the phone sign-in is attempted
-      if (!window.recaptchaVerifier && recaptchaContainerRef.current) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
-          'size': 'invisible',
-          'callback': () => { /* reCAPTCHA solved */ },
-          'expired-callback': () => {
-            toast({ variant: "destructive", title: "reCAPTCHA Expired", description: "Please try signing in again." });
-            setIsSigningIn(false);
-          }
-        });
-      }
-      
-      const appVerifier = window.recaptchaVerifier;
-      if (!appVerifier) {
-        throw new Error("Could not create reCAPTCHA verifier.");
-      }
+      const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current!, {
+        'size': 'invisible',
+        'callback': () => {},
+        'expired-callback': () => {
+          toast({ variant: "destructive", title: "reCAPTCHA Expired", description: "Please try signing in again." });
+          setIsSigningIn(false);
+        }
+      });
+      window.recaptchaVerifier = verifier;
 
       const phoneNumber = prompt("Please enter your phone number with country code (e.g., +15551234567):");
       if (!phoneNumber) {
-          setIsSigningIn(false);
-          return;
+        setIsSigningIn(false);
+        verifier.clear();
+        return;
       }
     
-      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, verifier);
       window.confirmationResult = confirmationResult;
 
       const verificationCode = prompt("Please enter the 6-digit verification code sent to your phone:");
@@ -132,15 +141,15 @@ export default function LoginPage() {
         await window.confirmationResult.confirm(verificationCode);
         handleSignInSuccess();
       } else {
-        setIsSigningIn(false); // User cancelled or there was an issue
+        setIsSigningIn(false);
       }
     } catch (error: any) {
-      // Cleanup the verifier if it exists.
+      handleSignInError(error, 'Phone');
+    } finally {
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear();
         window.recaptchaVerifier = undefined;
       }
-      handleSignInError(error, 'Phone');
     }
   };
 
@@ -167,7 +176,7 @@ export default function LoginPage() {
         </CardContent>
       </Card>
       {/* This container is essential for the invisible reCAPTCHA */}
-      <div ref={recaptchaContainerRef}></div>
+      <div id="recaptcha-container" ref={recaptchaContainerRef}></div>
     </div>
   );
 }
