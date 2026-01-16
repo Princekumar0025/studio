@@ -18,7 +18,6 @@ import {
   Stethoscope,
   PanelLeft,
   Activity,
-  BookOpen,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -33,7 +32,6 @@ const navItems = [
   { href: '/admin/doctors', label: 'Doctors', icon: Users },
   { href: '/admin/store', label: 'Store', icon: Store },
   { href: '/admin/conditions', label: 'Conditions', icon: Activity },
-  { href: '/admin/guides', label: 'Guides', icon: BookOpen },
 ];
 
 function AdminHeader() {
