@@ -1,3 +1,5 @@
+'use client';
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, HeartPulse, Bone, Brain, UserCheck } from "lucide-react";
@@ -5,7 +7,67 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { therapists } from "@/lib/data";
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import { Skeleton } from "@/components/ui/skeleton";
+
+type Therapist = {
+  id: string;
+  name: string;
+  title: string;
+  imageId: string;
+  specializations: string[];
+};
+
+function MeetTheTeamSection() {
+    const firestore = useFirestore();
+    const therapistsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'therapists') : null, [firestore]);
+    const { data: therapists, isLoading } = useCollection<Therapist>(therapistsCollection);
+
+    if (isLoading) {
+        return (
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                {[...Array(2)].map((_, i) => (
+                    <div key={i} className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-background rounded-lg shadow-sm">
+                        <Skeleton className="h-24 w-24 rounded-full" />
+                        <div className="space-y-2">
+                           <Skeleton className="h-6 w-40" />
+                           <Skeleton className="h-5 w-24" />
+                           <Skeleton className="h-4 w-48" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )
+    }
+
+    if (!therapists || therapists.length === 0) {
+        return null; // Don't show the section if no therapists
+    }
+
+    return (
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        {therapists.map(therapist => {
+            const image = PlaceHolderImages.find(p => p.id === therapist.imageId);
+            return (
+            <div key={therapist.id} className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-background rounded-lg shadow-sm">
+                {image && (
+                    <Avatar className="h-24 w-24">
+                    <AvatarImage src={image.imageUrl} alt={therapist.name} data-ai-hint={image.imageHint} />
+                    <AvatarFallback>{therapist.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                )}
+                <div className="text-center sm:text-left">
+                <h3 className="font-headline text-xl font-bold">{therapist.name}</h3>
+                <p className="text-primary font-semibold">{therapist.title}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{therapist.specializations.join(', ')}</p>
+                </div>
+            </div>
+            );
+        })}
+        </div>
+    )
+}
 
 export default function Home() {
   const heroImage = PlaceHolderImages.find(p => p.id === 'hero-image');
@@ -101,26 +163,7 @@ export default function Home() {
               Our team of dedicated professionals is committed to providing you with the highest quality of care.
             </p>
           </div>
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {therapists.map(therapist => {
-              const image = PlaceHolderImages.find(p => p.id === therapist.imageId);
-              return (
-                <div key={therapist.id} className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-background rounded-lg shadow-sm">
-                  {image && (
-                     <Avatar className="h-24 w-24">
-                       <AvatarImage src={image.imageUrl} alt={therapist.name} data-ai-hint={image.imageHint} />
-                       <AvatarFallback>{therapist.name.charAt(0)}</AvatarFallback>
-                     </Avatar>
-                  )}
-                  <div className="text-center sm:text-left">
-                    <h3 className="font-headline text-xl font-bold">{therapist.name}</h3>
-                    <p className="text-primary font-semibold">{therapist.title}</p>
-                    <p className="mt-2 text-sm text-muted-foreground">{therapist.specializations.join(', ')}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <MeetTheTeamSection />
           <div className="text-center mt-12">
             <Button variant="outline" asChild>
               <Link href="/team">Meet The Whole Team</Link>
