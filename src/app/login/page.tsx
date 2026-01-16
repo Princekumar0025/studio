@@ -13,16 +13,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { FcGoogle } from 'react-icons/fc';
 import { Phone } from 'lucide-react';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-// Attaching verifier to window to ensure it's a singleton and survives re-renders.
-declare global {
-  interface Window {
-    recaptchaVerifier?: RecaptchaVerifier;
-    confirmationResult?: ConfirmationResult;
-  }
-}
+// To prevent re-creating the verifier on every render.
+let recaptchaVerifier: RecaptchaVerifier | null = null;
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -32,30 +27,46 @@ export default function LoginPage() {
   const [phoneStage, setPhoneStage] = useState<'enterPhone' | 'enterCode'>('enterPhone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
-  const recaptchaContainerRef = useRef<HTMLDivElement | null>(null);
-
-  // Effect for cleaning up reCAPTCHA on unmount
-  useEffect(() => {
-    return () => {
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
+  // This is the container where the reCAPTCHA widget will be rendered.
+  // It is always present in the DOM but invisible.
+  const setupRecaptcha = () => {
+    if (!auth) return;
+    // It's important to only have one instance of RecaptchaVerifier.
+    // We clear the old one if it exists.
+    if (recaptchaVerifier) {
+       recaptchaVerifier.clear();
+       recaptchaVerifier = null;
+    }
+    recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      'size': 'invisible',
+      'callback': () => {
+        // reCAPTCHA solved, allow signInWithPhoneNumber.
+      },
+      'expired-callback': () => {
+        // Response expired. Ask user to solve reCAPTCHA again.
+        toast({
+          variant: "destructive",
+          title: "reCAPTCHA Expired",
+          description: "Please try sending the code again.",
+        });
+        setIsSigningIn(false);
       }
-    };
-  }, []);
+    });
+  };
 
   const resetPhoneSignIn = () => {
     setIsSigningIn(false);
     setPhoneStage('enterPhone');
     setPhoneNumber('');
     setVerificationCode('');
-    if (window.recaptchaVerifier) {
-      window.recaptchaVerifier.clear();
-      window.recaptchaVerifier = undefined;
+    setConfirmationResult(null);
+    if (recaptchaVerifier) {
+      recaptchaVerifier.clear();
+      recaptchaVerifier = null;
     }
-    window.confirmationResult = undefined;
   };
-
 
   const handleSignInSuccess = () => {
     setIsSigningIn(false);
@@ -92,6 +103,9 @@ export default function LoginPage() {
         case 'auth/network-request-failed':
             description = 'A network error occurred. Please check your internet connection and try again.';
             break;
+        case 'auth/captcha-check-failed':
+            description = 'The reCAPTCHA verification failed. Please try again.';
+            break;
         default:
             description = `An unexpected error occurred. Please check the console for details. (Code: ${error.code || 'N/A'})`;
             break;
@@ -125,24 +139,15 @@ export default function LoginPage() {
   const handleSendVerificationCode = async () => {
     if (!auth || isSigningIn || !phoneNumber) return;
     setIsSigningIn(true);
-  
-    if (window.recaptchaVerifier) {
-      window.recaptchaVerifier.clear();
-    }
 
     try {
-      const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current!, {
-        'size': 'invisible',
-        'callback': () => {},
-        'expired-callback': () => {
-          toast({ variant: "destructive", title: "reCAPTCHA Expired", description: "Please try signing in again." });
-          setIsSigningIn(false);
-        }
-      });
-      window.recaptchaVerifier = verifier;
-    
-      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, verifier);
-      window.confirmationResult = confirmationResult;
+      setupRecaptcha(); // Make sure verifier is set up
+      if (!recaptchaVerifier) {
+        // This should not happen if setupRecaptcha is correct
+        throw new Error("RecaptchaVerifier not initialized");
+      }
+      const result = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
+      setConfirmationResult(result);
       setPhoneStage('enterCode');
       setIsSigningIn(false);
       toast({
@@ -156,15 +161,25 @@ export default function LoginPage() {
   };
 
   const handleConfirmVerificationCode = async () => {
-      if (!verificationCode || !window.confirmationResult) return;
+      if (!verificationCode || !confirmationResult) return;
       setIsSigningIn(true);
       try {
-        await window.confirmationResult.confirm(verificationCode);
+        await confirmationResult.confirm(verificationCode);
         handleSignInSuccess();
       } catch (error) {
         handleSignInError(error, 'Phone');
       }
   }
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recaptchaVerifier) {
+        recaptchaVerifier.clear();
+        recaptchaVerifier = null;
+      }
+    };
+  }, []);
 
   return (
     <div className="container flex items-center justify-center py-20">
@@ -214,8 +229,9 @@ export default function LoginPage() {
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value)}
                 disabled={isSigningIn}
+                maxLength={6}
               />
-              <Button className="w-full" onClick={handleConfirmVerificationCode} disabled={isSigningIn || !verificationCode}>
+              <Button className="w-full" onClick={handleConfirmVerificationCode} disabled={isSigningIn || verificationCode.length < 6}>
                 {isSigningIn ? 'Verifying...' : 'Confirm Code'}
               </Button>
                <Button variant="link" size="sm" className="w-full" onClick={resetPhoneSignIn}>
@@ -226,8 +242,8 @@ export default function LoginPage() {
 
         </CardContent>
       </Card>
-      {/* This container is essential for the invisible reCAPTCHA */}
-      <div id="recaptcha-container" ref={recaptchaContainerRef}></div>
+      {/* This container is essential for the invisible reCAPTCHA. It MUST be in the DOM. */}
+      <div id="recaptcha-container"></div>
     </div>
   );
 }
