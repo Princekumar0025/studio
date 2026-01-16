@@ -2,31 +2,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAdmin() {
-      // Use exists() for robust checking. get() fails when a doc doesn't exist,
-      // making it unsuitable for existence checks.
-      return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
-
     // Publicly readable collections, manageable by admins
     match /subscriptionPlans/{planId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     match /products/{productId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
     
     match /conditions/{conditionId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     match /treatmentGuides/{guideId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     // Contact Form: Writable by anyone, readable by authenticated users, deletable by admins.
@@ -34,26 +28,26 @@ service cloud.firestore {
       allow create: if true;
       allow get, list: if request.auth != null;
       allow update: if false;
-      allow delete: if isAdmin();
+      allow delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     // Therapists collection and subcollections
     match /therapists/{therapistId} {
       // Therapist documents are publicly readable, but only admins can modify them.
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
 
       // Appointments can be created by anyone, but only viewed/managed by authenticated users/admins
       match /appointments/{appointmentId} {
           allow create: if true;
           allow get, list: if request.auth != null;
-          allow update, delete: if isAdmin();
+          allow update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
       }
       
       // Availability is public to read, but only admins can change it.
       match /availability/{date} {
           allow read: if true;
-          allow write: if isAdmin();
+          allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
       }
     }
 
@@ -64,9 +58,9 @@ service cloud.firestore {
         allow list: if false; // Prevents listing all user docs
 
         match /subscriptions/{subscriptionId} {
-            allow get: if request.auth != null && (request.auth.uid == userId || isAdmin());
+            allow get: if request.auth != null && (request.auth.uid == userId || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
             allow create: if request.auth != null && request.auth.uid == userId;
-            allow update, delete: if isAdmin();
+            allow update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
             allow list: if false; // Only allow listing through collection group query below
         }
     }
