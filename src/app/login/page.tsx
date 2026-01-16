@@ -1,9 +1,9 @@
 'use client';
 import { useAuth } from '@/firebase';
-import { 
-  GoogleAuthProvider, 
-  signInWithPopup, 
-  signInWithPhoneNumber, 
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithPhoneNumber,
   RecaptchaVerifier,
   ConfirmationResult
 } from 'firebase/auth';
@@ -16,7 +16,8 @@ import { Phone } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-// To prevent re-creating the verifier on every render.
+// To prevent re-creating the verifier on every render, it's managed at the module level.
+// This is safe for this component as it's mounted once per page navigation.
 let recaptchaVerifier: RecaptchaVerifier | null = null;
 
 export default function LoginPage() {
@@ -34,7 +35,7 @@ export default function LoginPage() {
   const setupRecaptcha = () => {
     if (!auth) return;
     // It's important to only have one instance of RecaptchaVerifier.
-    // We clear the old one if it exists.
+    // We clear the old one if it exists to avoid conflicts.
     if (recaptchaVerifier) {
        recaptchaVerifier.clear();
        recaptchaVerifier = null;
@@ -89,7 +90,7 @@ export default function LoginPage() {
             description = 'An account already exists with this email address. Please sign in using the method you originally used.';
             break;
         case 'auth/operation-not-allowed':
-             description = `Sign-in with ${provider} is not enabled. Please go to your Firebase Console -> Authentication -> Sign-in method, and enable the ${provider} provider.`;
+             description = `Sign-in with ${provider} is not enabled. Go to your Firebase Console > Authentication > Sign-in method, and enable the ${provider} provider.`;
              break;
         case 'auth/invalid-phone-number':
             description = 'The phone number you entered is not valid. Please make sure to include the country code (e.g., +15551234567).';
@@ -107,7 +108,7 @@ export default function LoginPage() {
             description = 'The reCAPTCHA verification failed. Please try again.';
             break;
         default:
-            description = `An unexpected error occurred. Please check the console for details. (Code: ${error.code || 'N/A'})`;
+            description = `An unexpected error occurred. (Code: ${error.code || 'N/A'}). Check browser console for details.`;
             break;
     }
 
@@ -143,7 +144,6 @@ export default function LoginPage() {
     try {
       setupRecaptcha(); // Make sure verifier is set up
       if (!recaptchaVerifier) {
-        // This should not happen if setupRecaptcha is correct
         throw new Error("RecaptchaVerifier not initialized");
       }
       const result = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
@@ -209,7 +209,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <Input 
                 type="tel"
-                placeholder="Phone number (e.g. +1...)"
+                placeholder="Phone number (e.g. +15551234567)"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 disabled={isSigningIn}
