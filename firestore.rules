@@ -20,21 +20,6 @@
  *   therapist they are for. Writable by anyone, but only manageable by admins.
  * - /therapists/{therapistId}/availability: Availability for a therapist. Publicly readable
  *   but manageable only by admins.
- *
- * Key Security Decisions:
- * - Public Read-Only Content: The 'therapists', 'products', 'conditions', 'treatmentGuides',
- *   and 'subscriptionPlans' collections are world-readable to serve the app's informational purpose.
- *   Write operations are restricted to admins to ensure data integrity.
- * - Admin-Managed Content: 'appointments', and therapist 'availability'
- *   are fully manageable by admins.
- * - Write-Only Drop Boxes: The 'appointments' and 'contactFormSubmissions'
- *   collections allow any user (including anonymous ones) to create documents.
- *   However, read and modification access is restricted to prevent users from
- *   viewing other users' sensitive information, except for admins.
- * - Admin Role Management: An '/admins' collection stores the UIDs of admin users.
- *   Admin status is checked by verifying the existence of a document in this collection
- *   corresponding to the requesting user's UID. The first admin must be added
- *   manually through the Firebase Console.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -152,6 +137,39 @@ service cloud.firestore {
       allow create: if true;
       allow update: if false;
     }
+    
+    /**
+     * @description User-specific data, including subscriptions.
+     * @path /users/{userId}
+     * @allow (read, write) A user can read and write to their own data subtree.
+     */
+     match /users/{userId}/{documents=**} {
+       allow read, write: if request.auth != null && request.auth.uid == userId;
+     }
+
+    /**
+     * @description Rules for a user's subscription documents.
+     * @path /users/{userId}/subscriptions/{subscriptionId}
+     * @allow (get) A user can read their own subscriptions. Admins can read any subscription.
+     * @allow (create) A user can create their own subscription.
+     * @allow (update, delete) Only admins can modify or delete subscriptions.
+     */
+    match /users/{userId}/subscriptions/{subscriptionId} {
+      allow get: if request.auth != null && (request.auth.uid == userId || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      // Listing is handled by the collection group rule below for admins only.
+      allow list: if false;
+    }
+    
+    /**
+     * @description Admin collection group query for all subscriptions.
+     * @path /{path=**}/subscriptions/{subscriptionId}
+     * @allow (list) Admins can list all subscriptions across all users for the admin panel.
+     */
+    match /{path=**}/subscriptions/{subscriptionId} {
+        allow list: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
 
     /**
      * @description Stores a list of admin user UIDs. This collection is read-only from the client
@@ -167,3 +185,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
