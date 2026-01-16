@@ -53,6 +53,42 @@
       "description": "Person having their posture assessed.",
       "imageUrl": "https://images.unsplash.com/photo-1767611132085-167725b113ae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwb3N0dXJlJTIwY29ycmVjdGlvbnxlbnwwfHx8fDE3Njg0NzEyNTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "posture correction"
+    },
+    {
+      "id": "foam-roller",
+      "description": "A high-density foam roller for muscle recovery.",
+      "imageUrl": "https://images.unsplash.com/photo-1685633224860-7655234d9cd5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxmb2FtJTIwcm9sbGVyfGVufDB8fHx8MTc2ODQ5MzUxNnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "foam roller"
+    },
+    {
+      "id": "resistance-bands",
+      "description": "A set of resistance bands.",
+      "imageUrl": "https://images.unsplash.com/photo-1518609571773-39b7d303a87b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxyZXNpc3RhbmNlJTIwYmFuZHN8ZW58MHx8fHwxNzY4NTQ5NjgzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "resistance bands"
+    },
+    {
+      "id": "kinesiology-tape",
+      "description": "A roll of kinesiology tape.",
+      "imageUrl": "https://images.unsplash.com/photo-1765207363238-105669534be9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxraW5lc2lvbG9neSUyMHRhcGV8ZW58MHx8fHwxNzY4NTQ5Njg0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "kinesiology tape"
+    },
+    {
+      "id": "massage-ball",
+      "description": "A lacrosse massage ball.",
+      "imageUrl": "https://images.unsplash.com/photo-1585591424436-a55926755d91?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtYXNzYWdlJTIwYmFsbHxlbnwwfHx8fDE3Njg1NDk2ODR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "massage ball"
+    },
+    {
+      "id": "stretch-strap",
+      "description": "A yoga stretch strap.",
+      "imageUrl": "https://images.unsplash.com/photo-1711548244678-be7019032b59?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzdHJldGNoJTIwc3RyYXB8ZW58MHx8fHwxNzY4NTQ5NjgzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "stretch strap"
+    },
+    {
+      "id": "cold-pack",
+      "description": "A reusable hot and cold pack.",
+      "imageUrl": "https://images.unsplash.com/photo-1766699624078-70f928b1fb04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxjb2xkJTIwcGFja3xlbnwwfHx8fDE3Njg1NDk2ODR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cold pack"
     }
   ]
 }

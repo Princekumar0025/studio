@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Stethoscope } from "lucide-react";
+import { Menu, Stethoscope, ShoppingCart } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -13,6 +13,7 @@ const navLinks = [
   { href: "/conditions", label: "Conditions" },
   { href: "/guides", label: "Treatment Guides" },
   { href: "/team", label: "Our Team" },
+  { href: "/store", label: "Store" },
   { href: "/symptom-checker", label: "Symptom Checker" },
   { href: "/contact", label: "Contact" },
 ];
@@ -47,6 +48,12 @@ export function Header() {
         <div className="flex flex-1 items-center justify-end gap-2">
           <Button asChild>
             <Link href="/book-appointment">Book Appointment</Link>
+          </Button>
+          <Button variant="outline" size="icon" asChild>
+            <Link href="#">
+              <ShoppingCart className="h-4 w-4" />
+              <span className="sr-only">Shopping Cart</span>
+            </Link>
           </Button>
           <Sheet>
             <SheetTrigger asChild>
