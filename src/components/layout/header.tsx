@@ -23,7 +23,6 @@ const navLinks = [
   { href: "/guides", label: "Treatment Guides" },
   { href: "/team", label: "Our Team" },
   { href: "/store", label: "Store" },
-  { href: "/symptom-checker", label: "Symptom Checker" },
   { href: "/contact", label: "Contact" },
 ];
 
