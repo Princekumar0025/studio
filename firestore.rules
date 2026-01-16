@@ -3,7 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      // Switched to get() for robust checking, as exists() was failing.
+      return request.auth != null && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data != null;
     }
 
     // Publicly readable collections, manageable by admins
@@ -32,7 +33,7 @@ service cloud.firestore {
       allow create: if true;
       allow get, list: if request.auth != null;
       allow update: if false;
-      allow delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow delete: if isAdmin();
     }
 
     // Therapists collection and subcollections
@@ -56,16 +57,17 @@ service cloud.firestore {
     }
 
     // User-specific data
-    match /users/{userId}/{documents=**} {
-      allow get, write: if request.auth != null && request.auth.uid == userId;
-      allow list: if false;
-    }
+    match /users/{userId} {
+        // A user can get their own doc, but not list other user docs.
+        allow get, write: if request.auth != null && request.auth.uid == userId;
+        allow list: if false; // Prevents listing all user docs
 
-    match /users/{userId}/subscriptions/{subscriptionId} {
-        allow get: if request.auth != null && (request.auth.uid == userId || isAdmin());
-        allow create: if request.auth != null && request.auth.uid == userId;
-        allow update, delete: if isAdmin();
-        allow list: if false;
+        match /subscriptions/{subscriptionId} {
+            allow get: if request.auth != null && (request.auth.uid == userId || isAdmin());
+            allow create: if request.auth != null && request.auth.uid == userId;
+            allow update, delete: if isAdmin();
+            allow list: if false; // Only allow listing through collection group query below
+        }
     }
 
     // Admin collection group query for all subscriptions.
@@ -75,7 +77,7 @@ service cloud.firestore {
 
     // Admin UID list: Read-only from client
     match /admins/{userId} {
-      allow read: if true;
+      allow read: if true; // `get()` in rules requires this to be readable
       allow write: if false;
     }
   }
