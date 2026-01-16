@@ -1,167 +1,82 @@
-/**
- * Core Philosophy: This ruleset secures a physiotherapy information application.
- * It establishes a security model where core informational content (like therapist
- * profiles, medical conditions, and treatment guides) is publicly readable by
- * anyone, but can only be modified by administrators. User-submitted data, such
- * as appointments and contact form messages, are treated as "write-only" drop boxes
- * for most users, but are fully manageable by admins.
- *
- * Data Structure: The data is organized into logical top-level collections.
- * - /therapists: Publicly viewable therapist profiles.
- * - /products: Publicly viewable product listings.
- * - /conditions: Publicly viewable medical condition information.
- * - /treatmentGuides: Publicly viewable treatment guides.
- * - /subscriptionPlans: Publicly viewable subscription plans.
- * - /contactFormSubmissions: A collection for contact form entries, readable by admins.
- * - /admins: A private list of user UIDs with administrator privileges.
- *
- * Subcollections are used to establish clear relationships:
- * - /therapists/{therapistId}/appointments: Appointments are nested under the
- *   therapist they are for. Writable by anyone, but only manageable by admins.
- * - /therapists/{therapistId}/availability: Availability for a therapist. Publicly readable
- *   but manageable only by admins.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // -------------------------------------------------------------------------
-    // Admin Check
-    // -------------------------------------------------------------------------
-
-    // Admin status is checked directly in rules via:
-    // `request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid))`
-
-    // -------------------------------------------------------------------------
-    // Collection Rules
-    // -------------------------------------------------------------------------
-
-    /**
-     * @description Publicly readable subscription plans. Admins can manage them.
-     */
-    match /subscriptionPlans {
-      allow list: if true;
-      allow create: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    function isAdmin() {
+      return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
+
+    // Publicly readable collections, manageable by admins
     match /subscriptionPlans/{planId} {
-      allow get: if true;
-      allow update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow get, list: if true;
+      allow write: if isAdmin();
     }
 
-    /**
-     * @description Publicly readable therapist profiles. Admins can manage them.
-     */
-    match /therapists {
-      allow list: if true;
-      allow create: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    match /products/{productId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
     }
+    
+    match /conditions/{conditionId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    match /treatmentGuides/{guideId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    // Contact Form: Writable by anyone, readable by authenticated users, deletable by admins.
+    match /contactFormSubmissions/{submissionId} {
+      allow create: if true;
+      allow get, list: if request.auth != null;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // Therapists collection and subcollections
     match /therapists/{therapistId} {
-      allow get: if true;
-      allow update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      // Therapist documents are publicly readable, but only admins can modify them.
+      allow get, list: if true;
+      allow write: if isAdmin();
 
-      /**
-       * @description Appointments for a specific therapist.
-       */
+      // Appointments can be created by anyone, but only viewed/managed by authenticated users/admins
       match /appointments/{appointmentId} {
-        allow get, list: if request.auth != null;
-        allow update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-        allow create: if true;
+          allow create: if true;
+          allow get, list: if request.auth != null;
+          allow update, delete: if isAdmin();
       }
       
-      /**
-       * @description Availability for a specific therapist.
-       */
+      // Availability is public to read, but only admins can change it.
       match /availability/{date} {
-        allow read: if true;
-        allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+          allow read: if true;
+          allow write: if isAdmin();
       }
     }
-    
-    /**
-     * @description Publicly readable product information. Admins can manage them.
-     */
-    match /products {
-        allow list: if true;
-        allow create: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
-    match /products/{productId} {
-      allow get: if true;
-      allow update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
 
-    /**
-     * @description Information about medical conditions. Admins can manage them.
-     */
-    match /conditions {
-        allow list: if true;
-        allow create: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
-    match /conditions/{conditionId} {
-      allow get: if true;
-      allow update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
-
-    /**
-     * @description Publicly readable treatment guides. Admins can manage them.
-     */
-    match /treatmentGuides {
-        allow list: if true;
-        allow create: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
-    match /treatmentGuides/{guideId} {
-      allow get: if true;
-      allow update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
-
-    /**
-     * @description Submissions from the website's contact form.
-     */
-    match /contactFormSubmissions {
-      allow list: if request.auth != null;
-      allow create: if true;
-    }
-    match /contactFormSubmissions/{contactFormSubmissionId} {
-      allow get: if request.auth != null;
-      allow delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-      allow update: if false;
-    }
-    
-    /**
-     * @description User-specific data. Users can get and write their own documents, but cannot list them.
-     * This prevents queries that span multiple user documents from being blocked.
-     * Listing is handled by more specific rules (e.g., collection group queries).
-     * @path /users/{userId}/{documents=**}
-     */
-     match /users/{userId}/{documents=**} {
-       allow get, write: if request.auth != null && request.auth.uid == userId;
-       allow list: if false;
-     }
-
-    /**
-     * @description Rules for a user's subscription documents.
-     */
-    match /users/{userId}/subscriptions/{subscriptionId} {
-      allow get: if request.auth != null && (request.auth.uid == userId || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-      // Listing is handled by the collection group rule below for admins only.
+    // User-specific data
+    match /users/{userId}/{documents=**} {
+      allow get, write: if request.auth != null && request.auth.uid == userId;
       allow list: if false;
     }
-    
-    /**
-     * @description Admin collection group query for all subscriptions.
-     */
+
+    match /users/{userId}/subscriptions/{subscriptionId} {
+        allow get: if request.auth != null && (request.auth.uid == userId || isAdmin());
+        allow create: if request.auth != null && request.auth.uid == userId;
+        allow update, delete: if isAdmin();
+        allow list: if false;
+    }
+
+    // Admin collection group query for all subscriptions.
     match /{path=**}/subscriptions/{subscriptionId} {
         allow list: if request.auth != null;
     }
 
-    /**
-     * @description Stores a list of admin user UIDs. This collection is read-only from the client
-     * to allow security rules to check for admin status. Admins must be managed via the Firebase Console.
-     */
+    // Admin UID list: Read-only from client
     match /admins/{userId} {
-        allow read: if true;
-        allow write: if false;
+      allow read: if true;
+      allow write: if false;
     }
   }
 }
