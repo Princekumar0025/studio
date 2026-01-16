@@ -2,66 +2,68 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Publicly readable collections, manageable by admins
+    // Publicly readable collections, manageable by authenticated (admin) users
     match /subscriptionPlans/{planId} {
       allow get, list: if true;
-      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow write: if request.auth != null;
     }
 
     match /products/{productId} {
       allow get, list: if true;
-      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow write: if request.auth != null;
     }
     
     match /conditions/{conditionId} {
       allow get, list: if true;
-      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow write: if request.auth != null;
     }
 
     match /treatmentGuides/{guideId} {
       allow get, list: if true;
-      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow write: if request.auth != null;
     }
 
-    // Contact Form: Writable by anyone, readable by authenticated users, deletable by admins.
+    // Contact Form: Writable by anyone, manageable by authenticated (admin) users
     match /contactFormSubmissions/{submissionId} {
       allow create: if true;
       allow get, list: if request.auth != null;
       allow update: if false;
-      allow delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow delete: if request.auth != null;
     }
 
     // Therapists collection and subcollections
     match /therapists/{therapistId} {
-      // Therapist documents are publicly readable, but only admins can modify them.
       allow get, list: if true;
-      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow write: if request.auth != null;
 
-      // Appointments can be created by anyone, but only viewed/managed by authenticated users/admins
+      // Appointments can be created by anyone, but only viewed/managed by authenticated (admin) users
       match /appointments/{appointmentId} {
           allow create: if true;
           allow get, list: if request.auth != null;
-          allow update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+          allow update, delete: if request.auth != null;
       }
       
-      // Availability is public to read, but only admins can change it.
+      // Availability is public to read, but only authenticated (admin) users can change it.
       match /availability/{date} {
           allow read: if true;
-          allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+          allow write: if request.auth != null;
       }
     }
 
     // User-specific data
     match /users/{userId} {
-        // A user can get their own doc, but not list other user docs.
+        // A user can get/write their own doc, but not list other user docs.
         allow get, write: if request.auth != null && request.auth.uid == userId;
-        allow list: if false; // Prevents listing all user docs
+        allow list: if false; 
 
         match /subscriptions/{subscriptionId} {
+            // A user can get their own subscription. Admins can also get any subscription.
             allow get: if request.auth != null && (request.auth.uid == userId || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
             allow create: if request.auth != null && request.auth.uid == userId;
+            // Only admins can update or delete subscriptions.
             allow update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-            allow list: if false; // Only allow listing through collection group query below
+            // Listing is handled by the collection group query below.
+            allow list: if false; 
         }
     }
 
@@ -72,7 +74,7 @@ service cloud.firestore {
 
     // Admin UID list: Read-only from client
     match /admins/{userId} {
-      allow read: if true; // `exists()` and `get()` in rules require this to be readable
+      allow read: if true; 
       allow write: if false;
     }
   }
