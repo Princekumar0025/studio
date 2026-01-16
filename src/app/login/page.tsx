@@ -1,111 +1,52 @@
 'use client';
 import { useAuth } from '@/firebase';
 import {
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithPhoneNumber,
-  RecaptchaVerifier,
-  ConfirmationResult
+  signInWithEmailAndPassword,
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { FcGoogle } from 'react-icons/fc';
-import { Phone } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import { Label } from '@/components/ui/label';
+import { Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-
-// To prevent re-creating the verifier on every render, it's managed at the module level.
-// This is safe for this component as it's mounted once per page navigation.
-let recaptchaVerifier: RecaptchaVerifier | null = null;
 
 export default function LoginPage() {
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [isSigningIn, setIsSigningIn] = useState(false);
-  const [phoneStage, setPhoneStage] = useState<'enterPhone' | 'enterCode'>('enterPhone');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-
-  // This is the container where the reCAPTCHA widget will be rendered.
-  // It is always present in the DOM but invisible.
-  const setupRecaptcha = () => {
-    if (!auth) return;
-    // It's important to only have one instance of RecaptchaVerifier.
-    // We clear the old one if it exists to avoid conflicts.
-    if (recaptchaVerifier) {
-       recaptchaVerifier.clear();
-       recaptchaVerifier = null;
-    }
-    recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      'size': 'invisible',
-      'callback': () => {
-        // reCAPTCHA solved, allow signInWithPhoneNumber.
-      },
-      'expired-callback': () => {
-        // Response expired. Ask user to solve reCAPTCHA again.
-        toast({
-          variant: "destructive",
-          title: "reCAPTCHA Expired",
-          description: "Please try sending the code again.",
-        });
-        setIsSigningIn(false);
-      }
-    });
-  };
-
-  const resetPhoneSignIn = () => {
-    setIsSigningIn(false);
-    setPhoneStage('enterPhone');
-    setPhoneNumber('');
-    setVerificationCode('');
-    setConfirmationResult(null);
-    if (recaptchaVerifier) {
-      recaptchaVerifier.clear();
-      recaptchaVerifier = null;
-    }
-  };
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSignInSuccess = () => {
     setIsSigningIn(false);
     router.push('/admin/dashboard');
   };
 
-  const handleSignInError = (error: any, provider: string) => {
+  const handleSignInError = (error: any) => {
     setIsSigningIn(false);
-    console.error(`Error signing in with ${provider}:`, error);
+    console.error(`Error signing in with email/password:`, error);
     
     let description = `An unknown error occurred. Please try again.`;
     switch(error.code) {
-        case 'auth/popup-closed-by-user':
-            description = 'The sign-in window was closed before completing. Please try again.';
+        case 'auth/invalid-credential':
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+            description = 'Invalid email or password. Please try again.';
             break;
-        case 'auth/popup-blocked':
-            description = 'Sign-in pop-up was blocked by the browser. Please allow pop-ups for this site and try again.';
-            break;
-        case 'auth/account-exists-with-different-credential':
-            description = 'An account already exists with this email address. Please sign in using the method you originally used.';
+        case 'auth/invalid-email':
+            description = 'The email address you entered is not valid.';
             break;
         case 'auth/operation-not-allowed':
-             description = `Sign-in with ${provider} is not enabled. Go to your Firebase Console > Authentication > Sign-in method, and enable the ${provider} provider.`;
+             description = `Sign-in with email and password is not enabled. An administrator must enable this in the Firebase Console.`;
              break;
-        case 'auth/invalid-phone-number':
-            description = 'The phone number you entered is not valid. Please make sure to include the country code (e.g., +15551234567).';
-            break;
         case 'auth/too-many-requests':
-            description = 'We have blocked all requests from this device due to unusual activity. Please try again later.';
-            break;
-        case 'auth/invalid-verification-code':
-            description = 'The verification code is incorrect. Please double-check the code and try again.';
+            description = 'Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.';
             break;
         case 'auth/network-request-failed':
             description = 'A network error occurred. Please check your internet connection and try again.';
-            break;
-        case 'auth/captcha-check-failed':
-            description = 'The reCAPTCHA verification failed. Please try again.';
             break;
         default:
             description = `An unexpected error occurred. (Code: ${error.code || 'N/A'}). Check browser console for details.`;
@@ -118,132 +59,60 @@ export default function LoginPage() {
       description: description,
       duration: 9000,
     });
-    if (provider === 'Phone') {
-      resetPhoneSignIn();
-    }
   };
 
-  const signInWithProvider = async (providerInstance: GoogleAuthProvider) => {
-    if (!auth || isSigningIn) return;
+  const handleEmailPasswordSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!auth || isSigningIn || !email || !password) return;
     setIsSigningIn(true);
     try {
-      await signInWithPopup(auth, providerInstance);
+      await signInWithEmailAndPassword(auth, email, password);
       handleSignInSuccess();
     } catch (error) {
-      const providerName = providerInstance.providerId.includes('google') ? 'Google' : 'Other';
-      handleSignInError(error, providerName);
+      handleSignInError(error);
     }
   };
-
-  const handleGoogleSignIn = () => signInWithProvider(new GoogleAuthProvider());
-  
-  const handleSendVerificationCode = async () => {
-    if (!auth || isSigningIn || !phoneNumber) return;
-    setIsSigningIn(true);
-
-    try {
-      setupRecaptcha(); // Make sure verifier is set up
-      if (!recaptchaVerifier) {
-        throw new Error("RecaptchaVerifier not initialized");
-      }
-      const result = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
-      setConfirmationResult(result);
-      setPhoneStage('enterCode');
-      setIsSigningIn(false);
-      toast({
-        title: "Verification Code Sent",
-        description: "A 6-digit code has been sent to your phone.",
-      });
-
-    } catch (error: any) {
-      handleSignInError(error, 'Phone');
-    }
-  };
-
-  const handleConfirmVerificationCode = async () => {
-      if (!verificationCode || !confirmationResult) return;
-      setIsSigningIn(true);
-      try {
-        await confirmationResult.confirm(verificationCode);
-        handleSignInSuccess();
-      } catch (error) {
-        handleSignInError(error, 'Phone');
-      }
-  }
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (recaptchaVerifier) {
-        recaptchaVerifier.clear();
-        recaptchaVerifier = null;
-      }
-    };
-  }, []);
 
   return (
     <div className="container flex items-center justify-center py-20">
       <Card className="w-full max-w-md shadow-lg border-2">
         <CardHeader className="text-center">
           <CardTitle className="font-headline text-3xl">Admin Access</CardTitle>
-          <CardDescription>Sign in to manage PhysioGuide</CardDescription>
+          <CardDescription>Sign in with your administrator credentials.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 pt-6">
-          <Button className="w-full" onClick={handleGoogleSignIn} disabled={isSigningIn}>
-            <FcGoogle className="mr-2 h-5 w-5" /> 
-            {isSigningIn ? 'Signing in...' : 'Sign in with Google'}
-          </Button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          
-          {phoneStage === 'enterPhone' && (
+        <CardContent className="pt-6">
+          <form onSubmit={handleEmailPasswordSignIn} className="space-y-4">
             <div className="space-y-2">
-              <Input 
-                type="tel"
-                placeholder="Phone number (e.g. +15551234567)"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                disabled={isSigningIn}
-              />
-              <Button variant="outline" className="w-full" onClick={handleSendVerificationCode} disabled={isSigningIn || !phoneNumber}>
-                <Phone className="mr-2 h-4 w-4" /> 
-                {isSigningIn ? 'Sending Code...' : 'Sign in with Phone'}
-              </Button>
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                    id="email"
+                    type="email"
+                    placeholder="admin@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isSigningIn}
+                    required
+                />
             </div>
-          )}
-
-          {phoneStage === 'enterCode' && (
-             <div className="space-y-2">
-              <Input
-                type="text"
-                placeholder="6-digit verification code"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                disabled={isSigningIn}
-                maxLength={6}
-              />
-              <Button className="w-full" onClick={handleConfirmVerificationCode} disabled={isSigningIn || verificationCode.length < 6}>
-                {isSigningIn ? 'Verifying...' : 'Confirm Code'}
-              </Button>
-               <Button variant="link" size="sm" className="w-full" onClick={resetPhoneSignIn}>
-                Back to phone number entry
-              </Button>
+            <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input 
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isSigningIn}
+                    required
+                />
             </div>
-          )}
-
+            <Button type="submit" className="w-full" disabled={isSigningIn || !email || !password}>
+                {isSigningIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSigningIn ? 'Signing in...' : 'Sign In'}
+            </Button>
+          </form>
         </CardContent>
       </Card>
-      {/* This container is essential for the invisible reCAPTCHA. It MUST be in the DOM. */}
-      <div id="recaptcha-container"></div>
     </div>
   );
 }
