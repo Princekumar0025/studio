@@ -16,7 +16,8 @@
  * Subcollections are used to establish clear relationships:
  * - /therapists/{therapistId}/appointments: Appointments are nested under the
  *   therapist they are for. Writable by anyone, but only manageable by admins.
- * - /therapists/{therapistId}/availability: Availability for a therapist, manageable only by admins.
+ * - /therapists/{therapistId}/availability: Availability for a therapist. Publicly readable
+ *   but manageable only by admins.
  *
  * Key Security Decisions:
  * - Public Read-Only Content: The 'therapists' and 'products'
@@ -79,11 +80,13 @@ service cloud.firestore {
       /**
        * @description Availability for a specific therapist.
        * @path /therapists/{therapistId}/availability/{date}
-       * @allow (read, write) Only admins can manage therapist availability.
-       * @principle Restricts sensitive scheduling information to authorized personnel.
+       * @allow (read) Anyone can view therapist availability.
+       * @allow (write) Only admins can manage therapist availability.
+       * @principle Restricts sensitive scheduling information to authorized personnel, while allowing public viewing for booking.
        */
       match /availability/{date} {
-        allow read, write: if isAdmin();
+        allow read: if true;
+        allow write: if isAdmin();
       }
     }
     
@@ -136,5 +139,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

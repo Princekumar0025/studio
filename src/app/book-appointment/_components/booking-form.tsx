@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -89,7 +89,11 @@ export function BookingForm() {
   }, [firestore, selectedTherapistId, formattedDate]);
 
   const { data: availabilityData, isLoading: availabilityLoading } = useDoc<{timeSlots: string[]}>(availabilityDocRef);
-  const availableTimes = availabilityData?.timeSlots?.sort() || [];
+  
+  const availableTimes = useMemo(() => {
+    if (!availabilityData?.timeSlots) return [];
+    return [...availabilityData.timeSlots].sort();
+  }, [availabilityData]);
 
   // Reset time when date or therapist changes
   useEffect(() => {
@@ -283,5 +287,3 @@ export function BookingForm() {
     </Card>
   );
 }
-
-    

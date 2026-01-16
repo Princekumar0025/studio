@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -38,7 +38,6 @@ import {
   arrayRemove,
   query,
   where,
-  Timestamp,
 } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -75,7 +74,11 @@ export default function AppointmentsAdminPage() {
     return doc(firestore, 'therapists', selectedTherapist, 'availability', formattedDate);
   }, [firestore, selectedTherapist, formattedDate]);
   const { data: availabilityData, isLoading: availabilityLoading } = useDoc<Availability>(availabilityDocRef);
-  const availableSlots = availabilityData?.timeSlots || [];
+  
+  const sortedSlots = useMemo(() => {
+    if (!availabilityData?.timeSlots) return [];
+    return [...availabilityData.timeSlots].sort();
+  }, [availabilityData]);
 
   // Fetch appointments for the selected therapist and date
   const appointmentsQuery = useMemoFirebase(() => {
@@ -95,13 +98,18 @@ export default function AppointmentsAdminPage() {
   }, [firestore, selectedTherapist, date]);
   const { data: appointments, isLoading: appointmentsLoading } = useCollection<Appointment>(appointmentsQuery);
 
+  const sortedAppointments = useMemo(() => {
+    if (!appointments) return [];
+    return [...appointments].sort((a, b) => new Date(a.appointmentDateTime).getTime() - new Date(b.appointmentDateTime).getTime());
+  }, [appointments]);
+
   const handleAddTime = () => {
     if (!availabilityDocRef || !newTime) return;
     if (!/^\d{2}:\d{2}$/.test(newTime)) {
       toast({ variant: "destructive", title: "Invalid Time Format", description: "Please use HH:MM format (e.g., 14:30)." });
       return;
     }
-    if (availableSlots.includes(newTime)) {
+    if (sortedSlots.includes(newTime)) {
       toast({ variant: "destructive", title: "Time Slot Exists" });
       return;
     }
@@ -169,9 +177,9 @@ export default function AppointmentsAdminPage() {
             </CardHeader>
             <CardContent>
               {appointmentsLoading && <Skeleton className="h-20 w-full" />}
-              {!appointmentsLoading && appointments && appointments.length > 0 && (
+              {!appointmentsLoading && sortedAppointments && sortedAppointments.length > 0 && (
                 <div className="space-y-2">
-                  {appointments.sort((a,b) => new Date(a.appointmentDateTime).getTime() - new Date(b.appointmentDateTime).getTime()).map(app => (
+                  {sortedAppointments.map(app => (
                     <div key={app.id} className="flex items-center justify-between bg-muted p-3 rounded-md">
                       <div className="font-semibold">{app.patientName}</div>
                       <div>{format(new Date(app.appointmentDateTime), 'p')}</div>
@@ -179,7 +187,7 @@ export default function AppointmentsAdminPage() {
                   ))}
                 </div>
               )}
-              {!appointmentsLoading && (!appointments || appointments.length === 0) && (
+              {!appointmentsLoading && (!sortedAppointments || sortedAppointments.length === 0) && (
                 <div className="text-center text-muted-foreground py-8">
                   <p>No appointments scheduled for this day.</p>
                 </div>
@@ -213,8 +221,8 @@ export default function AppointmentsAdminPage() {
                 <Label>Available Time Slots for {formattedDate}</Label>
                 <div className="space-y-2 max-h-60 overflow-y-auto rounded-md border p-2">
                   {availabilityLoading ? <Skeleton className="h-20 w-full" /> : (
-                    availableSlots.length > 0 ? (
-                      availableSlots.sort().map(time => (
+                    sortedSlots.length > 0 ? (
+                      sortedSlots.map(time => (
                         <div key={time} className="flex items-center justify-between bg-muted p-2 rounded-md text-sm">
                           <span>{time}</span>
                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveTime(time)}>
@@ -250,5 +258,3 @@ export default function AppointmentsAdminPage() {
     </div>
   );
 }
-
-    
