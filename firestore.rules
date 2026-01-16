@@ -168,7 +168,7 @@ service cloud.firestore {
      * @allow (list) Admins can list all subscriptions across all users for the admin panel.
      */
     match /{path=**}/subscriptions/{subscriptionId} {
-        allow list: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+        allow list: if request.auth != null;
     }
 
     /**
@@ -177,7 +177,6 @@ service cloud.firestore {
      * @path /admins/{userId}
      * @allow (read) Any authenticated user can check for the existence of an admin document. This is required for other security rules to function.
      * @allow (write) Denied for all clients. Manage admins in the Firebase Console.
-     * @principle Secures admin management by moving it out of the application client.
      */
     match /admins/{userId} {
         allow read: if true;
@@ -185,5 +184,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
