@@ -1,5 +1,41 @@
 {
   "entities": {
+    "SubscriptionPlan": {
+      "title": "Subscription Plan",
+      "type": "object",
+      "description": "Represents a subscription plan for patients.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the subscription plan."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description of the plan."
+        },
+        "price": {
+          "type": "number",
+          "description": "Monthly price of the plan."
+        },
+        "features": {
+          "type": "array",
+          "description": "List of features included in the plan.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "isFeatured": {
+          "type": "boolean",
+          "description": "Whether this plan should be highlighted."
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "price",
+        "features"
+      ]
+    },
     "Therapist": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Therapist",
@@ -254,6 +290,22 @@
   },
   "firestore": {
     "structure": [
+      {
+        "path": "/subscriptionPlans/{planId}",
+        "definition": {
+          "entityName": "SubscriptionPlan",
+          "schema": {
+            "$ref": "#/backend/entities/SubscriptionPlan"
+          },
+          "description": "Stores details for patient subscription plans.",
+          "params": [
+            {
+              "name": "planId",
+              "description": "Unique identifier for the plan."
+            }
+          ]
+        }
+      },
       {
         "path": "/therapists/{therapistId}",
         "definition": {

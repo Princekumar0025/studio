@@ -20,6 +20,7 @@ import {
   Activity,
   Mail,
   BookHeart,
+  Award,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -35,6 +36,7 @@ const navItems = [
   { href: '/admin/store', label: 'Store', icon: Store },
   { href: '/admin/conditions', label: 'Conditions', icon: Activity },
   { href: '/admin/guides', label: 'Guides', icon: BookHeart },
+  { href: '/admin/plans', label: 'Plans', icon: Award },
   { href: '/admin/contact', label: 'Messages', icon: Mail },
 ];
 

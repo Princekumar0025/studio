@@ -75,6 +75,7 @@ export function Header() {
     { href: "/guides", label: "Treatment Guides" },
     { href: "/team", label: "Our Team" },
     { href: "/store", label: "Store" },
+    { href: "/pricing", label: "Pricing" },
     { href: "/contact", label: "Contact" },
   ];
   const pathname = usePathname();

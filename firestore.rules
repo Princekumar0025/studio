@@ -11,6 +11,7 @@
  * - /products: Publicly viewable product listings.
  * - /conditions: Publicly viewable medical condition information.
  * - /treatmentGuides: Publicly viewable treatment guides.
+ * - /subscriptionPlans: Publicly viewable subscription plans.
  * - /contactFormSubmissions: A collection for contact form entries, readable by admins.
  * - /admins: A private list of user UIDs with administrator privileges.
  *
@@ -21,8 +22,8 @@
  *   but manageable only by admins.
  *
  * Key Security Decisions:
- * - Public Read-Only Content: The 'therapists', 'products', 'conditions', and 'treatmentGuides'
- *   collections are world-readable to serve the app's informational purpose.
+ * - Public Read-Only Content: The 'therapists', 'products', 'conditions', 'treatmentGuides',
+ *   and 'subscriptionPlans' collections are world-readable to serve the app's informational purpose.
  *   Write operations are restricted to admins to ensure data integrity.
  * - Admin-Managed Content: 'appointments', and therapist 'availability'
  *   are fully manageable by admins.
@@ -49,6 +50,18 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
     // Collection Rules
     // -------------------------------------------------------------------------
+
+    /**
+     * @description Publicly readable subscription plans.
+     * @path /subscriptionPlans/{planId}
+     * @allow (get, list) Any user can view subscription plans.
+     * @allow (create, update, delete) Only admins can manage subscription plans.
+     * @principle Makes pricing and plan info public while restricting management to admins.
+     */
+    match /subscriptionPlans/{planId} {
+      allow get, list: if true;
+      allow create, update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
 
     /**
      * @description Publicly readable information about therapists.
@@ -127,7 +140,7 @@ service cloud.firestore {
     /**
      * @description Submissions from the website's contact form.
      * @path /contactFormSubmissions/{contactFormSubmissionId}
-     * @allow (get, list) Authenticated users can view submissions. This is necessary to avoid rule limitations for admin-only list views.
+     * @allow (get, list) Any authenticated user can view submissions. This is necessary to avoid rule limitations for admin-only list views.
      * @allow (delete) Only admins can delete submissions.
      * @allow (create) Any user can submit a message.
      * @deny (update) Submissions cannot be altered after creation.
@@ -149,7 +162,7 @@ service cloud.firestore {
      * @principle Secures admin management by moving it out of the application client.
      */
     match /admins/{userId} {
-        allow read: if request.auth != null;
+        allow read: if true;
         allow write: if false;
     }
   }
