@@ -3,24 +3,23 @@
 import { useState } from 'react';
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
   CardFooter,
+  CardContent,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Trash2 } from 'lucide-react';
-import { AddProductDialog } from './_components/add-product-dialog';
+import { AddGuideDialog } from './_components/add-guide-dialog';
 import {
-  collection,
+  collectionGroup,
   doc,
   deleteDoc,
+  query
 } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,31 +34,39 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import Image from 'next/image';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
-type Product = {
+type Guide = {
   id: string;
-  name: string;
-  price: number;
-  imageId: string;
+  title: string;
   description: string;
+  imageId: string;
+  conditionId: string;
+  // This is the full path to the document, provided by collectionGroup queries
+  docPath: string; 
 };
 
-function ProductList() {
+function GuidesList() {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const productsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'products') : null, [firestore]);
-  const { data: products, isLoading } = useCollection<Product>(productsCollection);
+  // Use a collectionGroup query to get all 'treatmentGuides' from all 'conditions'.
+  const guidesQuery = useMemoFirebase(() => firestore ? query(collectionGroup(firestore, 'treatmentGuides')) : null, [firestore]);
+  const { data: guides, isLoading, error } = useCollection<Omit<Guide, 'docPath'>>(guidesQuery);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
-  const handleDelete = (productId: string, productName: string) => {
+  const handleDelete = (guide: Guide) => {
       if (!firestore) return;
-      const docRef = doc(firestore, 'products', productId);
+      
+      // We need to construct the full path to the document to delete it.
+      // Firestore path for a subcollection document: /collection/{docId}/subcollection/{subDocId}
+      const docRef = doc(firestore, `conditions/${guide.conditionId}/treatmentGuides`, guide.id);
       
       deleteDoc(docRef)
         .then(() => {
             toast({
-                title: "Product Removed",
-                description: `${productName} has been removed from the store.`,
+                title: "Guide Removed",
+                description: `${guide.title} has been removed.`,
             });
         })
         .catch((error) => {
@@ -88,7 +95,7 @@ function ProductList() {
                 <Skeleton className="h-32 w-full" />
             </CardContent>
             <CardFooter>
-                <Skeleton className="h-10 w-20" />
+                 <Skeleton className="h-10 w-20" />
             </CardFooter>
           </Card>
         ))}
@@ -96,43 +103,50 @@ function ProductList() {
     );
   }
 
+  if (guides?.length === 0) {
+    return (
+        <div className="text-center text-muted-foreground py-8">
+            <p>No treatment guides have been added yet.</p>
+        </div>
+    )
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {products?.map((product) => {
-        const image = PlaceHolderImages.find((p) => p.id === product.imageId);
+      {guides?.map((guide) => {
+        const image = PlaceHolderImages.find((p) => p.id === guide.imageId);
         return (
-          <Card key={product.id} className="flex flex-col">
+          <Card key={guide.id} className="flex flex-col">
             {image && (
                 <div className="relative h-48 w-full">
-                    <Image src={image.imageUrl} alt={product.name} fill className="object-cover rounded-t-lg" />
+                    <Image src={image.imageUrl} alt={guide.title} fill className="object-cover rounded-t-lg" />
                 </div>
             )}
             <CardHeader>
-              <CardTitle>{product.name}</CardTitle>
-              <CardDescription>${product.price.toFixed(2)}</CardDescription>
+              <CardTitle>{guide.title}</CardTitle>
             </CardHeader>
             <CardContent className="flex-grow">
-              <p className="text-sm text-muted-foreground">{product.description}</p>
+              <p className="text-sm text-muted-foreground">{guide.description}</p>
             </CardContent>
             <CardFooter>
                <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" onClick={() => setIsDeleting(product.id)}>
+                    <Button variant="destructive" size="sm" onClick={() => setIsDeleting(guide.id)}>
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
                     </Button>
                 </AlertDialogTrigger>
-                {isDeleting === product.id && (
+                {isDeleting === guide.id && (
                     <AlertDialogContent>
                         <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the product "{product.name}".
+                            This action cannot be undone. This will permanently delete the guide "{guide.title}".
                         </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setIsDeleting(null)}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(product.id, product.name)}>
+                        <AlertDialogAction onClick={() => handleDelete(guide as Guide)}>
                             Continue
                         </AlertDialogAction>
                         </AlertDialogFooter>
@@ -148,19 +162,19 @@ function ProductList() {
 }
 
 
-export default function StoreAdminPage() {
+export default function GuidesAdminPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Manage Store</h1>
-        <AddProductDialog>
+        <h1 className="text-2xl font-bold">Manage Treatment Guides</h1>
+        <AddGuideDialog>
           <Button>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Product
+            Add Guide
           </Button>
-        </AddProductDialog>
+        </AddGuideDialog>
       </div>
-      <ProductList />
+      <GuidesList />
     </div>
   );
 }

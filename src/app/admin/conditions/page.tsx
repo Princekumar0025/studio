@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -11,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Trash2 } from 'lucide-react';
-import { AddProductDialog } from './_components/add-product-dialog';
+import { AddConditionDialog } from './_components/add-condition-dialog';
 import {
   collection,
   doc,
@@ -19,8 +18,6 @@ import {
 } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,31 +32,30 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import Link from 'next/link';
 
-type Product = {
+type Condition = {
   id: string;
   name: string;
-  price: number;
-  imageId: string;
-  description: string;
+  slug: string;
 };
 
-function ProductList() {
+function ConditionsList() {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const productsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'products') : null, [firestore]);
-  const { data: products, isLoading } = useCollection<Product>(productsCollection);
+  const conditionsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'conditions') : null, [firestore]);
+  const { data: conditions, isLoading } = useCollection<Condition>(conditionsCollection);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
-  const handleDelete = (productId: string, productName: string) => {
+  const handleDelete = (conditionId: string, conditionName: string) => {
       if (!firestore) return;
-      const docRef = doc(firestore, 'products', productId);
+      const docRef = doc(firestore, 'conditions', conditionId);
       
       deleteDoc(docRef)
         .then(() => {
             toast({
-                title: "Product Removed",
-                description: `${productName} has been removed from the store.`,
+                title: "Condition Removed",
+                description: `${conditionName} has been removed.`,
             });
         })
         .catch((error) => {
@@ -84,55 +80,53 @@ function ProductList() {
               <Skeleton className="h-6 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
             </CardHeader>
-            <CardContent>
-                <Skeleton className="h-32 w-full" />
-            </CardContent>
             <CardFooter>
-                <Skeleton className="h-10 w-20" />
+                 <Skeleton className="h-10 w-20" />
             </CardFooter>
           </Card>
         ))}
       </div>
     );
   }
+  
+  if (conditions?.length === 0) {
+    return (
+        <div className="text-center text-muted-foreground py-8">
+            <p>No conditions have been added yet.</p>
+        </div>
+    )
+  }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {products?.map((product) => {
-        const image = PlaceHolderImages.find((p) => p.id === product.imageId);
-        return (
-          <Card key={product.id} className="flex flex-col">
-            {image && (
-                <div className="relative h-48 w-full">
-                    <Image src={image.imageUrl} alt={product.name} fill className="object-cover rounded-t-lg" />
-                </div>
-            )}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {conditions?.map((condition) => (
+          <Card key={condition.id}>
             <CardHeader>
-              <CardTitle>{product.name}</CardTitle>
-              <CardDescription>${product.price.toFixed(2)}</CardDescription>
+              <CardTitle>{condition.name}</CardTitle>
+              <CardDescription>/conditions/{condition.slug}</CardDescription>
             </CardHeader>
-            <CardContent className="flex-grow">
-              <p className="text-sm text-muted-foreground">{product.description}</p>
-            </CardContent>
-            <CardFooter>
+            <CardFooter className="flex justify-between">
+                <Button variant="outline" size="sm" asChild>
+                    <Link href={`/conditions/${condition.slug}`} target="_blank">View</Link>
+                </Button>
                <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" onClick={() => setIsDeleting(product.id)}>
+                    <Button variant="destructive" size="sm" onClick={() => setIsDeleting(condition.id)}>
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
                     </Button>
                 </AlertDialogTrigger>
-                {isDeleting === product.id && (
+                {isDeleting === condition.id && (
                     <AlertDialogContent>
                         <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the product "{product.name}".
+                            This action cannot be undone. This will permanently delete the condition "{condition.name}".
                         </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setIsDeleting(null)}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(product.id, product.name)}>
+                        <AlertDialogAction onClick={() => handleDelete(condition.id, condition.name)}>
                             Continue
                         </AlertDialogAction>
                         </AlertDialogFooter>
@@ -141,26 +135,24 @@ function ProductList() {
                 </AlertDialog>
             </CardFooter>
           </Card>
-        );
-      })}
+      ))}
     </div>
   );
 }
 
-
-export default function StoreAdminPage() {
+export default function ConditionsAdminPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Manage Store</h1>
-        <AddProductDialog>
+        <h1 className="text-2xl font-bold">Manage Conditions</h1>
+        <AddConditionDialog>
           <Button>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Product
+            Add Condition
           </Button>
-        </AddProductDialog>
+        </AddConditionDialog>
       </div>
-      <ProductList />
+      <ConditionsList />
     </div>
   );
 }
