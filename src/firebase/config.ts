@@ -1,9 +1,8 @@
-// This file is replaced by the content of your Firebase project's configuration in the App Prototyper
 export const firebaseConfig = {
-  apiKey: "REPLACE_WITH_YOUR_API_KEY",
-  authDomain: "REPLACE_WITH_YOUR_AUTH_DOMAIN",
-  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_YOUR_STORAGE_BUCKET",
-  messagingSenderId: "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
-  appId: "REPLACE_WITH_YOUR_APP_ID",
+  "projectId": "studio-2227817011-1a4b5",
+  "appId": "1:804080956485:web:44732e9cc9fe4c55725f2c",
+  "apiKey": "AIzaSyDe_SrynDCCpn_Qs7UJja98VxJzOwkt5Gw",
+  "authDomain": "studio-2227817011-1a4b5.firebaseapp.com",
+  "measurementId": "",
+  "messagingSenderId": "804080956485"
 };

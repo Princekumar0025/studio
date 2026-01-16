@@ -1,89 +1,297 @@
 {
   "entities": {
-    "User": {
-      "title": "User",
-      "description": "A user of the application.",
+    "Therapist": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Therapist",
       "type": "object",
+      "description": "Represents a physiotherapy therapist.",
       "properties": {
-        "displayName": {
+        "id": {
           "type": "string",
-          "description": "The user's display name."
+          "description": "Unique identifier for the therapist."
+        },
+        "name": {
+          "type": "string",
+          "description": "Therapist's full name."
+        },
+        "bio": {
+          "type": "string",
+          "description": "Biography of the therapist, including qualifications and specializations."
+        },
+        "photoUrl": {
+          "type": "string",
+          "description": "URL to the therapist's profile photo.",
+          "format": "uri"
+        },
+        "specializations": {
+          "type": "array",
+          "description": "List of specializations for the therapist.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "bio",
+        "photoUrl"
+      ]
+    },
+    "Condition": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Condition",
+      "type": "object",
+      "description": "Represents a medical condition that physiotherapy can treat.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the condition."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the condition."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the condition, including symptoms and causes."
+        },
+        "treatmentOptions": {
+          "type": "string",
+          "description": "Summary of available physiotherapy treatment options."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "treatmentOptions"
+      ]
+    },
+    "TreatmentGuide": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TreatmentGuide",
+      "type": "object",
+      "description": "Represents a guide for a specific physiotherapy treatment or exercise.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the treatment guide."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the treatment guide."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the treatment or exercise."
+        },
+        "steps": {
+          "type": "array",
+          "description": "Array of steps for the treatment guide.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL to an image illustrating the treatment or exercise.",
+          "format": "uri"
+        },
+        "videoUrl": {
+          "type": "string",
+          "description": "URL to a video demonstrating the treatment or exercise.",
+          "format": "uri"
+        },
+        "conditionId": {
+          "type": "string",
+          "description": "Reference to Condition. (Relationship: Condition 1:N TreatmentGuide)"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "steps"
+      ]
+    },
+    "Appointment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Appointment",
+      "type": "object",
+      "description": "Represents a booked physiotherapy appointment.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the appointment."
+        },
+        "patientName": {
+          "type": "string",
+          "description": "Name of the patient."
         },
         "email": {
           "type": "string",
-          "format": "email",
-          "description": "The user's email address."
+          "description": "Email address of the patient.",
+          "format": "email"
         },
-        "photoURL": {
+        "phoneNumber": {
           "type": "string",
-          "format": "uri",
-          "description": "The URL of the user's profile picture."
+          "description": "Phone number of the patient."
         },
-        "role": {
-            "type": "string",
-            "enum": ["patient", "admin"],
-            "description": "The user's role."
+        "appointmentDateTime": {
+          "type": "string",
+          "description": "Date and time of the appointment.",
+          "format": "date-time"
+        },
+        "therapistId": {
+          "type": "string",
+          "description": "Reference to Therapist. (Relationship: Therapist 1:N Appointment)"
         }
       },
-      "required": ["displayName", "email"]
+      "required": [
+        "id",
+        "patientName",
+        "email",
+        "phoneNumber",
+        "appointmentDateTime",
+        "therapistId"
+      ]
     },
-    "Doctor": {
-      "title": "Doctor",
-      "description": "A doctor or physiotherapist.",
+    "ContactFormSubmission": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ContactFormSubmission",
       "type": "object",
+      "description": "Represents a submission from the contact form.",
       "properties": {
-        "name": { "type": "string" },
-        "title": { "type": "string" },
-        "specializations": { "type": "array", "items": { "type": "string" } },
-        "bio": { "type": "string" },
-        "imageId": { "type": "string" }
-      },
-      "required": ["name", "title", "bio"]
-    },
-    "Product": {
-      "title": "Product",
-      "description": "A product available in the store.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "price": { "type": "number" },
-        "imageId": { "type": "string" }
-      },
-      "required": ["name", "price"]
-    },
-    "Appointment": {
-        "title": "Appointment",
-        "description": "A booked appointment.",
-        "type": "object",
-        "properties": {
-            "userId": { "type": "string" },
-            "doctorId": { "type": "string" },
-            "date": { "type": "string", "format": "date-time" },
-            "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled"] }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the contact form submission."
         },
-        "required": ["userId", "doctorId", "date", "status"]
+        "name": {
+          "type": "string",
+          "description": "Name of the person submitting the form."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the person submitting the form.",
+          "format": "email"
+        },
+        "message": {
+          "type": "string",
+          "description": "The message submitted through the contact form."
+        },
+        "submissionDateTime": {
+          "type": "string",
+          "description": "Date and time of the form submission.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "message",
+        "submissionDateTime"
+      ]
     }
   },
   "auth": {
-    "providers": ["google.com", "facebook.com", "phone"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/users/{userId}": {
-        "schema": { "$ref": "#/entities/User" },
-        "description": "User profile data."
-    },
-    "/doctors/{doctorId}": {
-        "schema": { "$ref": "#/entities/Doctor" },
-        "description": "List of doctors."
-    },
-    "/products/{productId}": {
-        "schema": { "$ref": "#/entities/Product" },
-        "description": "List of store products."
-    },
-    "/appointments/{appointmentId}": {
-        "schema": { "$ref": "#/entities/Appointment" },
-        "description": "List of all appointments."
-    }
+    "structure": [
+      {
+        "path": "/therapists/{therapistId}",
+        "definition": {
+          "entityName": "Therapist",
+          "schema": {
+            "$ref": "#/backend/entities/Therapist"
+          },
+          "description": "Stores therapist profiles. Includes denormalized 'id' for easier querying and potential future authorization needs.",
+          "params": [
+            {
+              "name": "therapistId",
+              "description": "Unique identifier for the therapist."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/conditions/{conditionId}",
+        "definition": {
+          "entityName": "Condition",
+          "schema": {
+            "$ref": "#/backend/entities/Condition"
+          },
+          "description": "Stores information about medical conditions. Includes denormalized 'id' for simpler lookups.",
+          "params": [
+            {
+              "name": "conditionId",
+              "description": "Unique identifier for the condition."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/conditions/{conditionId}/treatmentGuides/{treatmentGuideId}",
+        "definition": {
+          "entityName": "TreatmentGuide",
+          "schema": {
+            "$ref": "#/backend/entities/TreatmentGuide"
+          },
+          "description": "Stores treatment guides for specific conditions.  Related to condition via 'conditionId' field.",
+          "params": [
+            {
+              "name": "conditionId",
+              "description": "Unique identifier for the condition."
+            },
+            {
+              "name": "treatmentGuideId",
+              "description": "Unique identifier for the treatment guide."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/therapists/{therapistId}/appointments/{appointmentId}",
+        "definition": {
+          "entityName": "Appointment",
+          "schema": {
+            "$ref": "#/backend/entities/Appointment"
+          },
+          "description": "Stores appointment bookings, nested under the respective therapist. Path based ownership by therapist.",
+          "params": [
+            {
+              "name": "therapistId",
+              "description": "Unique identifier for the therapist."
+            },
+            {
+              "name": "appointmentId",
+              "description": "Unique identifier for the appointment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/contactFormSubmissions/{contactFormSubmissionId}",
+        "definition": {
+          "entityName": "ContactFormSubmission",
+          "schema": {
+            "$ref": "#/backend/entities/ContactFormSubmission"
+          },
+          "description": "Stores contact form submissions for review.",
+          "params": [
+            {
+              "name": "contactFormSubmissionId",
+              "description": "Unique identifier for the contact form submission."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to efficiently manage physiotherapy-related data while prioritizing security and scalability. It leverages path-based ownership and structural segregation to simplify security rules and ensure data integrity.  Therapist, Condition, and TreatmentGuide data are stored in root-level collections, intended to be globally available. Appointments are stored within a therapist's document for easy retrieval. ContactFormSubmissions are stored in a dedicated collection for review. \n\nAuthorization Independence is achieved by not relying on `get()` calls in security rules. Data requiring specific access controls (e.g., user-specific data, collaborative content) would need to denormalize authorization-related data into the documents themselves.\n\nThis structure supports QAPs by:\n\n*   Segregating data based on access requirements. Public data (Therapists, Conditions, TreatmentGuides) are stored separately from potentially private data (Appointments, ContactFormSubmissions).\n*   Leveraging path-based ownership for user-specific data, enabling secure list operations based on user ID."
   }
 }

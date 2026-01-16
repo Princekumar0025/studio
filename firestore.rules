@@ -1,8 +1,130 @@
+/**
+ * Core Philosophy: This ruleset secures a physiotherapy information application.
+ * It establishes a security model where core informational content (like therapist
+ * profiles, medical conditions, and treatment guides) is publicly readable by
+ * anyone, but can only be modified by administrators. User-submitted data, such
+ * as appointments and contact form messages, are treated as "write-only" drop boxes.
+ * This means any user can submit this data, but cannot read, update, or delete it
+ * afterward, protecting the privacy of all submissions.
+ *
+ * Data Structure: The data is organized into logical top-level collections.
+ * - /therapists: Publicly viewable therapist profiles.
+ * - /conditions: Publicly viewable medical condition information.
+ * - /contactFormSubmissions: A private collection for contact form entries.
+ *
+ * Subcollections are used to establish clear relationships:
+ * - /therapists/{therapistId}/appointments: Appointments are nested under the
+ *   therapist they are for.
+ * - /conditions/{conditionId}/treatmentGuides: Treatment guides are nested
+ *   under the relevant condition.
+ *
+ * Key Security Decisions:
+ * - Public Read-Only Content: The 'therapists', 'conditions', and 'treatmentGuides'
+ *   collections are world-readable to serve the app's informational purpose.
+ *   All client-side write operations are disabled to ensure data integrity,
+ *   reserving these operations for a trusted admin backend.
+ * - Write-Only Drop Boxes: The 'appointments' and 'contactFormSubmissions'
+ *   collections allow any user (including anonymous ones) to create documents.
+ *   However, all read and modification access is denied to prevent users from
+ *   viewing or altering other users' sensitive information.
+ * - No User-Specific Data Trees: This model does not include a '/users/{userId}'
+ *   collection, as the primary features do not involve user accounts managing
+ *   their own persistent data.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+
+    // -------------------------------------------------------------------------
+    // Helper Functions
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns true if the user is signed in.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Placeholder for admin role checks. In this secure-by-default model,
+     * this is always false for client-side requests. Administrative tasks
+     * should be handled by a trusted server environment.
+     */
+    function isAdmin() {
+      return false;
+    }
+
+    /**
+     * @description Publicly readable information about therapists.
+     * @path /therapists/{therapistId}
+     * @allow (get) Any user, signed-in or not, can view a therapist's profile.
+     * @deny (create) A client is not allowed to add a new therapist. This is an admin task.
+     * @principle Makes content publicly accessible while centralizing content management.
+     */
+    match /therapists/{therapistId} {
+      allow get, list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+
+      /**
+       * @description Appointments for a specific therapist.
+       * @path /therapists/{therapistId}/appointments/{appointmentId}
+       * @allow (create) Any user, signed-in or not, can create an appointment.
+       * @deny (get) A user cannot read an appointment after booking to protect PII.
+       * @principle Implements a "write-only drop box" for user submissions.
+       */
+      match /therapists/{therapistId}/appointments/{appointmentId} {
+        allow get: if false;
+        allow list: if false;
+        allow create: if true;
+        allow update: if false;
+        allow delete: if false;
+      }
+    }
+
+    /**
+     * @description Publicly readable information about medical conditions.
+     * @path /conditions/{conditionId}
+     * @allow (list) Any user, signed-in or not, can list all available conditions.
+     * @deny (update) A client is not allowed to modify a condition. This is an admin task.
+     * @principle Makes content publicly accessible while centralizing content management.
+     */
+    match /conditions/{conditionId} {
+      allow get, list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+
+      /**
+       * @description Publicly readable treatment guides for a specific condition.
+       * @path /conditions/{conditionId}/treatmentGuides/{treatmentGuideId}
+       * @allow (get) Any user, signed-in or not, can view a specific treatment guide.
+       * @deny (delete) A client is not allowed to delete a guide. This is an admin task.
+       * @principle Makes content publicly accessible while centralizing content management.
+       */
+      match /conditions/{conditionId}/treatmentGuides/{treatmentGuideId} {
+        allow get, list: if true;
+        allow create: if false;
+        allow update: if false;
+        allow delete: if false;
+      }
+    }
+
+    /**
+     * @description Submissions from the website's contact form.
+     * @path /contactFormSubmissions/{contactFormSubmissionId}
+     * @allow (create) Any user, signed-in or not, can submit a message.
+     * @deny (list) Users cannot list all submissions to protect the privacy of others.
+     * @principle Implements a "write-only drop box" for user submissions.
+     */
+    match /contactFormSubmissions/{contactFormSubmissionId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if true;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
