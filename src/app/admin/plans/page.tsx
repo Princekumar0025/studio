@@ -8,12 +8,11 @@ import { PlanDialog, type Plan } from './_components/plan-dialog';
 
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, CheckCircle, XCircle } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 
 function PlansList() {
   const firestore = useFirestore();
@@ -70,16 +69,14 @@ function PlansList() {
           <h1 className="text-2xl font-bold">Manage Subscription Plans</h1>
           <p className="text-muted-foreground">Add, edit, or remove subscription plans for patients.</p>
         </div>
-        <PlanDialog open={dialogOpen && !selectedPlan} onOpenChange={setDialogOpen}>
-          <Button onClick={handleAddClick}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Plan
-          </Button>
-        </PlanDialog>
+        <Button onClick={handleAddClick}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Plan
+        </Button>
       </div>
 
       <Card>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -144,17 +141,12 @@ function PlansList() {
         </CardContent>
       </Card>
       
-      {/* Edit Dialog */}
       <PlanDialog
         plan={selectedPlan}
-        open={dialogOpen && !!selectedPlan}
+        open={dialogOpen}
         onOpenChange={setDialogOpen}
-      >
-        {/* Trigger is not used, dialog controlled by state */}
-        <></>
-      </PlanDialog>
+      />
 
-      {/* Delete Confirmation */}
       <AlertDialog open={deleteAlertOpen} onOpenChange={setDeleteAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

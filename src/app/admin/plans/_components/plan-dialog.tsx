@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -19,7 +19,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,7 +31,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 
 export type Plan = {
@@ -56,14 +54,12 @@ type PlanFormValues = z.infer<typeof formSchema>;
 
 interface PlanDialogProps {
   plan?: Plan;
-  children: React.ReactNode;
   onOpenChange: (open: boolean) => void;
   open: boolean;
 }
 
 export function PlanDialog({
   plan,
-  children,
   open,
   onOpenChange,
 }: PlanDialogProps) {
@@ -74,29 +70,18 @@ export function PlanDialog({
 
   const form = useForm<PlanFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: isEditMode
-      ? {
-          name: plan.name,
-          description: plan.description,
-          price: plan.price,
-          features: plan.features.join('\n'),
-          isFeatured: plan.isFeatured || false,
-        }
-      : {
-          name: '',
-          description: '',
-          price: 0,
-          features: '',
-          isFeatured: false,
-        },
+    defaultValues: {
+      name: '',
+      description: '',
+      price: 0,
+      features: '',
+      isFeatured: false,
+    },
   });
   
-  // Reset form when dialog opens for a new plan
-  useState(() => {
-    if (open && !isEditMode) {
-      form.reset();
-    }
-     if (open && isEditMode) {
+  useEffect(() => {
+    if (open) {
+      if (isEditMode && plan) {
         form.reset({
           name: plan.name,
           description: plan.description,
@@ -104,8 +89,17 @@ export function PlanDialog({
           features: plan.features.join('\n'),
           isFeatured: plan.isFeatured || false,
         });
+      } else {
+        form.reset({
+          name: '',
+          description: '',
+          price: 0,
+          features: '',
+          isFeatured: false,
+        });
+      }
     }
-  });
+  }, [open, isEditMode, plan, form]);
 
   async function onSubmit(values: PlanFormValues) {
     if (!firestore) return;
@@ -117,7 +111,7 @@ export function PlanDialog({
     };
 
     try {
-      if (isEditMode) {
+      if (isEditMode && plan) {
         const planRef = doc(firestore, 'subscriptionPlans', plan.id);
         await setDoc(planRef, planData, { merge: true });
         toast({ title: 'Plan Updated', description: `${values.name} has been updated.` });
@@ -126,10 +120,9 @@ export function PlanDialog({
         await addDoc(plansCollection, planData);
         toast({ title: 'Plan Added', description: `${values.name} has been added.` });
       }
-      form.reset();
       onOpenChange(false);
     } catch (error) {
-      const path = isEditMode
+      const path = isEditMode && plan
         ? `subscriptionPlans/${plan.id}`
         : 'subscriptionPlans';
       const permissionError = new FirestorePermissionError({
@@ -145,7 +138,6 @@ export function PlanDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Plan' : 'Add New Plan'}</DialogTitle>
