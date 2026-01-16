@@ -228,21 +228,6 @@
         "submittedAt"
       ]
     },
-    "Admin": {
-      "title": "Admin",
-      "type": "object",
-      "description": "Represents an administrator user. The existence of a document in the /admins collection with a user's UID as the document ID confers admin privileges.",
-      "properties": {
-        "addedOn": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The timestamp when the user was made an admin."
-        }
-      },
-      "required": [
-        "addedOn"
-      ]
-    },
     "TherapistAvailability": {
       "title": "Therapist Availability",
       "type": "object",
@@ -385,22 +370,6 @@
             {
               "name": "contactFormSubmissionId",
               "description": "Unique identifier for the contact form submission."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/admins/{userId}",
-        "definition": {
-          "entityName": "Admin",
-          "schema": {
-            "$ref": "#/backend/entities/Admin"
-          },
-          "description": "Stores a list of user UIDs that have admin privileges. The existence of a document grants admin rights.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The user's UID."
             }
           ]
         }

@@ -141,17 +141,16 @@ service cloud.firestore {
     }
 
     /**
-     * @description Stores a list of admin user UIDs.
+     * @description Stores a list of admin user UIDs. This collection is read-only from the client
+     * to allow security rules to check for admin status. Admins must be managed via the Firebase Console.
      * @path /admins/{userId}
-     * @allow (get, list) Any authenticated user can see the list of admins.
-     * @allow (create) Allows a user to become an admin (by creating a doc with their UID) OR an existing admin to add another admin.
-     * @allow (delete) Only existing admins can remove other admins.
-     * @principle Secures admin management by allowing an initial self-setup and then restricting modifications to current admins.
+     * @allow (read) Any authenticated user can check for the existence of an admin document. This is required for other security rules to function.
+     * @allow (write) Denied for all clients. Manage admins in the Firebase Console.
+     * @principle Secures admin management by moving it out of the application client.
      */
     match /admins/{userId} {
-        allow get, list: if request.auth != null;
-        allow create: if request.auth != null && (request.auth.uid == userId || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
-        allow delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+        allow read: if request.auth != null;
+        allow write: if false;
     }
   }
 }
