@@ -1,7 +1,11 @@
-import { RecaptchaVerifier } from "firebase/auth";
+// This file can be used for global type declarations
 
-declare global {
-  interface Window {
-    recaptchaVerifier: RecaptchaVerifier;
-  }
-}
+// For example:
+// declare global {
+//   interface Window {
+//     myGlobalVar: string;
+//   }
+// }
+
+// The empty export is to satisfy TypeScript's requirement for modules.
+export {};

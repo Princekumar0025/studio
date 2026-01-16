@@ -1,47 +1,42 @@
 'use client';
 import { useAuth } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup, FacebookAuthProvider, PhoneAuthProvider, signInWithPhoneNumber, RecaptchaVerifier } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, FacebookAuthProvider, signInWithPhoneNumber, RecaptchaVerifier } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FcGoogle } from 'react-icons/fc';
 import { FaFacebook } from 'react-icons/fa';
 import { Phone } from 'lucide-react';
-import React, { useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+  const recaptchaContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // Clean up verifier on unmount
   useEffect(() => {
-    if (auth && !window.recaptchaVerifier) {
-      try {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          'size': 'invisible',
-          'callback': (response: any) => {
-            // reCAPTCHA solved, allow signInWithPhoneNumber.
-          }
-        });
-      } catch (error) {
-        console.error("Error initializing RecaptchaVerifier", error);
-      }
-    }
-  }, [auth]);
+    const verifier = recaptchaVerifierRef.current;
+    return () => {
+      verifier?.clear();
+    };
+  }, []);
 
   const handleSignInSuccess = () => {
     router.push('/admin/dashboard');
-  }
+  };
 
   const handleSignInError = (error: any, provider: string) => {
     console.error(`Error signing in with ${provider}`, error);
     toast({
       variant: 'destructive',
       title: 'Authentication Failed',
-      description: `Could not sign in with ${provider}. Please try again.`
-    })
-  }
+      description: `Could not sign in with ${provider}. Please try again.`,
+    });
+  };
 
   const handleGoogleSignIn = async () => {
     if (!auth) return;
@@ -50,7 +45,7 @@ export default function LoginPage() {
       await signInWithPopup(auth, provider);
       handleSignInSuccess();
     } catch (error) {
-      handleSignInError(error, "Google");
+      handleSignInError(error, 'Google');
     }
   };
 
@@ -61,15 +56,40 @@ export default function LoginPage() {
       await signInWithPopup(auth, provider);
       handleSignInSuccess();
     } catch (error) {
-      handleSignInError(error, "Facebook");
+      handleSignInError(error, 'Facebook');
     }
   };
   
   const handlePhoneSignIn = async () => {
-    if(!auth) return;
+    if (!auth) return;
+
+    // Initialize reCAPTCHA verifier if it doesn't exist.
+    if (!recaptchaVerifierRef.current && recaptchaContainerRef.current) {
+      try {
+        const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+          'size': 'invisible',
+          'callback': () => {},
+        });
+        recaptchaVerifierRef.current = verifier;
+        await verifier.render();
+      } catch (error) {
+        handleSignInError(error, "reCAPTCHA");
+        return;
+      }
+    }
+    
+    const appVerifier = recaptchaVerifierRef.current;
+    if (!appVerifier) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'reCAPTCHA not ready. Please try again.',
+      });
+      return;
+    }
+
     const phoneNumber = prompt("Please enter your phone number with country code (e.g., +15551234567):");
     if (phoneNumber) {
-      const appVerifier = window.recaptchaVerifier;
       try {
         const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
         const verificationCode = prompt("Please enter the 6-digit verification code sent to your phone:");
@@ -78,12 +98,10 @@ export default function LoginPage() {
           handleSignInSuccess();
         }
       } catch (error) {
-        handleSignInError(error, "phone");
-        // Reset reCAPTCHA
-        window.recaptchaVerifier.render().then(function(widgetId) {
-          // @ts-ignore
-          grecaptcha.reset(widgetId);
-        });
+        handleSignInError(error, 'phone');
+        // Reset verifier for the next attempt
+        recaptchaVerifierRef.current?.clear();
+        recaptchaVerifierRef.current = null;
       }
     }
   };
@@ -107,7 +125,7 @@ export default function LoginPage() {
           </Button>
         </CardContent>
       </Card>
-      <div id="recaptcha-container"></div>
+      <div id="recaptcha-container" ref={recaptchaContainerRef}></div>
     </div>
   );
 }
