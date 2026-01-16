@@ -197,8 +197,9 @@
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "google.com",
+      "facebook.com",
+      "phone"
     ]
   },
   "firestore": {
