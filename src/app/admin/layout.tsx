@@ -20,6 +20,7 @@ import {
   Activity,
   Mail,
   BookHeart,
+  UserCog,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -36,6 +37,7 @@ const navItems = [
   { href: '/admin/conditions', label: 'Conditions', icon: Activity },
   { href: '/admin/guides', label: 'Guides', icon: BookHeart },
   { href: '/admin/contact', label: 'Messages', icon: Mail },
+  { href: '/admin/admins', label: 'Admins', icon: UserCog },
 ];
 
 function AdminHeader() {
