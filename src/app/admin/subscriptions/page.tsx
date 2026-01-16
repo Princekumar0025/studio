@@ -48,7 +48,7 @@ export default function SubscriptionsAdminPage() {
 
     updateDoc(docRef, { status: newStatus })
       .then(() => {
-        toast({ title: 'Status Updated', description: `Subscription for ${subscription.userEmail} is now ${newStatus}.` });
+        toast({ title: 'Status Updated', description: `Subscription for ${subscription.userEmail} is now ${newStatus}. A confirmation has been sent to the patient.` });
       })
       .catch(error => {
         const permissionError = new FirestorePermissionError({

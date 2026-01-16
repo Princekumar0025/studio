@@ -118,12 +118,14 @@ export function BookingForm() {
       therapistId: values.therapistId,
       status: 'pending',
     };
+    
+    const therapistName = therapists?.find(t => t.id === values.therapistId)?.name || 'the therapist';
 
     addDoc(appointmentsCollection, newAppointment)
       .then(() => {
         toast({
           title: "Appointment Requested!",
-          description: `We've received your request for an appointment on ${format(values.date, "PPP")} at ${values.time}. We will contact you shortly to confirm.`,
+          description: `Your request for ${format(values.date, "PPP")} at ${values.time} has been sent to ${therapistName}. You will receive a confirmation email shortly.`,
         });
         form.reset();
       })

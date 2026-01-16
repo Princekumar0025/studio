@@ -63,7 +63,7 @@ export function ContactForm() {
       .then(() => {
         toast({
           title: "Message Sent!",
-          description: "Thank you for contacting us. We'll get back to you shortly.",
+          description: "Thank you for contacting us. A notification has been sent to our admin team and we'll get back to you shortly.",
         });
         form.reset();
       })
@@ -152,5 +152,3 @@ export function ContactForm() {
     </Card>
   );
 }
-
-    
