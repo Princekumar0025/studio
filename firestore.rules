@@ -31,28 +31,20 @@
  *   However, read and modification access is restricted to prevent users from
  *   viewing other users' sensitive information, except for admins.
  * - Admin Role Management: An '/admins' collection stores the UIDs of admin users.
- *   The `isAdmin()` function checks for the existence of the requesting user's UID
- *   in this collection. Admins can manage the list of other admins. The first admin
- *   must be added manually through the Firebase Console.
+ *   Admin status is checked by verifying the existence of a document in this collection
+ *   corresponding to the requesting user's UID. The first admin must be added
+ *   manually through the Firebase Console.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // -------------------------------------------------------------------------
-    // Helper Functions
+    // Admin Check
     // -------------------------------------------------------------------------
 
-    /**
-     * Returns true if the user's UID is in the /admins collection.
-     * This is the sole mechanism for granting administrative privileges.
-     * It relies on a `get` call to the /admins collection, which must be
-     * explicitly allowed in the rules for that path.
-     */
-    function isAdmin() {
-      // Ensure user is authenticated before checking for admin status.
-      return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
+    // Admin status is checked directly in rules via:
+    // `request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid))`
 
     // -------------------------------------------------------------------------
     // Collection Rules
@@ -67,7 +59,7 @@ service cloud.firestore {
      */
     match /therapists/{therapistId} {
       allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
 
       /**
        * @description Appointments for a specific therapist.
@@ -77,7 +69,7 @@ service cloud.firestore {
        * @principle Implements a "write-only drop box" for public users, with full control for admins.
        */
       match /appointments/{appointmentId} {
-        allow get, list, update, delete: if isAdmin();
+        allow get, list, update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
         allow create: if true;
       }
       
@@ -90,7 +82,7 @@ service cloud.firestore {
        */
       match /availability/{date} {
         allow read: if true;
-        allow write: if isAdmin();
+        allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
       }
     }
     
@@ -103,7 +95,7 @@ service cloud.firestore {
      */
     match /products/{productId} {
       allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     /**
@@ -115,7 +107,7 @@ service cloud.firestore {
      */
     match /conditions/{conditionId} {
       allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     /**
@@ -127,7 +119,7 @@ service cloud.firestore {
      */
     match /treatmentGuides/{guideId} {
       allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     /**
@@ -139,7 +131,7 @@ service cloud.firestore {
      * @principle Implements a "write-only drop box" for public users, with review capabilities for admins.
      */
     match /contactFormSubmissions/{contactFormSubmissionId} {
-      allow get, list, delete: if isAdmin();
+      allow get, list, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
       allow create: if true;
       allow update: if false;
     }
@@ -147,7 +139,7 @@ service cloud.firestore {
     /**
      * @description Stores a list of admin user UIDs.
      * @path /admins/{userId}
-     * @allow (get) Any authenticated user can check if a user is an admin. This is required for the isAdmin() function to work reliably across the ruleset.
+     * @allow (get) Any authenticated user can check if a user is an admin. This is required for the `exists()` check to work reliably across the ruleset.
      * @allow (list) DISALLOWED for all users to prevent enumeration of admins.
      * @allow (write) Only existing admins can modify the admin list.
      * @principle Secures admin management by allowing authenticated reads for the `exists()` check, while preventing enumeration.
@@ -155,7 +147,7 @@ service cloud.firestore {
     match /admins/{userId} {
         allow get: if request.auth != null;
         allow list: if false;
-        allow write: if isAdmin();
+        allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
   }
 }
