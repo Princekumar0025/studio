@@ -79,15 +79,15 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, loading } = useUser();
+  const { user, isUserLoading } = useUser();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isUserLoading && !user) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [user, isUserLoading, router]);
   
-  if (loading) {
+  if (isUserLoading) {
       return <AdminLoading />;
   }
 

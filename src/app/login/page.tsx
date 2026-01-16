@@ -21,7 +21,9 @@ export default function LoginPage() {
   useEffect(() => {
     const verifier = recaptchaVerifierRef.current;
     return () => {
-      verifier?.clear();
+      if (verifier) {
+        verifier.clear();
+      }
     };
   }, []);
 
@@ -100,8 +102,10 @@ export default function LoginPage() {
       } catch (error) {
         handleSignInError(error, 'phone');
         // Reset verifier for the next attempt
-        recaptchaVerifierRef.current?.clear();
-        recaptchaVerifierRef.current = null;
+        if (recaptchaVerifierRef.current) {
+          recaptchaVerifierRef.current.clear();
+          recaptchaVerifierRef.current = null;
+        }
       }
     }
   };
