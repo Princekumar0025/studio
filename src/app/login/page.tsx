@@ -1,46 +1,36 @@
 'use client';
 import { useAuth } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup, FacebookAuthProvider, signInWithPhoneNumber, RecaptchaVerifier } from 'firebase/auth';
+import { 
+  GoogleAuthProvider, 
+  FacebookAuthProvider, 
+  signInWithPopup, 
+  signInWithPhoneNumber, 
+  RecaptchaVerifier,
+  ConfirmationResult
+} from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FcGoogle } from 'react-icons/fc';
 import { FaFacebook } from 'react-icons/fa';
 import { Phone } from 'lucide-react';
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+
+// Attaching verifier to window to ensure it's a singleton and survives re-renders.
+declare global {
+  interface Window {
+    recaptchaVerifier?: RecaptchaVerifier;
+    confirmationResult?: ConfirmationResult;
+  }
+}
 
 export default function LoginPage() {
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-  const recaptchaContainerRef = useRef<HTMLDivElement | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
-
-  // Robustly initialize and clean up the reCAPTCHA verifier
-  useEffect(() => {
-    if (auth && recaptchaContainerRef.current && !recaptchaVerifierRef.current) {
-      const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
-        'size': 'invisible',
-        'callback': () => {},
-        'expired-callback': () => {
-           toast({
-             variant: "destructive",
-             title: "reCAPTCHA Expired",
-             description: "Please try signing in with your phone again.",
-           });
-           recaptchaVerifierRef.current?.clear();
-           setIsSigningIn(false);
-        }
-      });
-      recaptchaVerifierRef.current = verifier;
-    }
-    // Cleanup on unmount
-    return () => {
-      recaptchaVerifierRef.current?.clear();
-    };
-  }, [auth, toast]);
+  const recaptchaContainerRef = useRef<HTMLDivElement | null>(null);
 
   const handleSignInSuccess = () => {
     setIsSigningIn(false);
@@ -49,9 +39,10 @@ export default function LoginPage() {
 
   const handleSignInError = (error: any, provider: string) => {
     setIsSigningIn(false);
-    console.error(`Error signing in with ${provider}:`, { code: error.code, message: error.message });
+    // Log the full error for debugging
+    console.error(`Error signing in with ${provider}:`, error);
     
-    let description = "An unknown error occurred. Please try again.";
+    let description = `An unknown error occurred. Please try again. (Code: ${error.code})`;
     switch(error.code) {
         case 'auth/popup-closed-by-user':
             description = 'The sign-in window was closed. Please try again.';
@@ -60,19 +51,26 @@ export default function LoginPage() {
             description = 'Sign-in pop-up was blocked. Please allow pop-ups for this site.';
             break;
         case 'auth/account-exists-with-different-credential':
-            description = 'An account already exists with this email but different sign-in credentials.';
+            description = 'An account already exists with this email using a different sign-in method.';
             break;
+        case 'auth/operation-not-allowed':
+             description = `Sign-in with ${provider} is not enabled in the project configuration.`;
+             break;
         case 'auth/invalid-phone-number':
-            description = 'The phone number you entered is not valid. Please include the country code.';
+            description = 'The phone number you entered is not valid. Please include the country code (e.g., +1).';
             break;
         case 'auth/too-many-requests':
-            description = 'Too many requests. Please try again later.';
+            description = 'We have blocked all requests from this device due to unusual activity. Try again later.';
             break;
         case 'auth/invalid-verification-code':
             description = 'The verification code is incorrect. Please try again.';
             break;
-        case 'auth/cancelled-popup-request':
-            description = 'Only one sign-in pop-up can be open at a time.';
+        case 'auth/network-request-failed':
+            description = 'A network error occurred. Please check your internet connection and try again.';
+            break;
+        default:
+            // The default description will now include the error code and message
+            description = `An unexpected error occurred: ${error.message} (Code: ${error.code || 'N/A'})`;
             break;
     }
 
@@ -83,57 +81,65 @@ export default function LoginPage() {
     });
   };
 
-  const handleGoogleSignIn = async () => {
+  const signInWithProvider = async (provider: GoogleAuthProvider | FacebookAuthProvider) => {
     if (!auth || isSigningIn) return;
     setIsSigningIn(true);
-    const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
       handleSignInSuccess();
     } catch (error) {
-      handleSignInError(error, 'Google');
+      const providerName = provider.providerId.includes('google') ? 'Google' : 'Facebook';
+      handleSignInError(error, providerName);
     }
   };
 
-  const handleFacebookSignIn = async () => {
-    if (!auth || isSigningIn) return;
-    setIsSigningIn(true);
-    const provider = new FacebookAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      handleSignInSuccess();
-    } catch (error) {
-      handleSignInError(error, 'Facebook');
-    }
-  };
+  const handleGoogleSignIn = () => signInWithProvider(new GoogleAuthProvider());
+  const handleFacebookSignIn = () => signInWithProvider(new FacebookAuthProvider());
   
   const handlePhoneSignIn = async () => {
-    if (!auth || isSigningIn || !recaptchaVerifierRef.current) {
-        if (!recaptchaVerifierRef.current) {
-             toast({ variant: 'destructive', title: 'reCAPTCHA Error', description: 'reCAPTCHA is not ready. Please wait a moment and try again.'});
-        }
-        return;
-    };
-    
+    if (!auth || isSigningIn) return;
     setIsSigningIn(true);
-    const appVerifier = recaptchaVerifierRef.current;
-    
-    const phoneNumber = prompt("Please enter your phone number with country code (e.g., +15551234567):");
-    if (!phoneNumber) {
-        setIsSigningIn(false);
-        return;
-    }
-    
+
     try {
+      // Initialize reCAPTCHA only when the phone sign-in is attempted
+      if (!window.recaptchaVerifier && recaptchaContainerRef.current) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+          'size': 'invisible',
+          'callback': () => { /* reCAPTCHA solved */ },
+          'expired-callback': () => {
+            toast({ variant: "destructive", title: "reCAPTCHA Expired", description: "Please try signing in again." });
+            setIsSigningIn(false);
+          }
+        });
+      }
+      
+      const appVerifier = window.recaptchaVerifier;
+      if (!appVerifier) {
+        throw new Error("Could not create reCAPTCHA verifier.");
+      }
+
+      const phoneNumber = prompt("Please enter your phone number with country code (e.g., +15551234567):");
+      if (!phoneNumber) {
+          setIsSigningIn(false);
+          return;
+      }
+    
       const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+      window.confirmationResult = confirmationResult;
+
       const verificationCode = prompt("Please enter the 6-digit verification code sent to your phone:");
-      if (verificationCode) {
-        await confirmationResult.confirm(verificationCode);
+      if (verificationCode && window.confirmationResult) {
+        await window.confirmationResult.confirm(verificationCode);
         handleSignInSuccess();
       } else {
-        setIsSigningIn(false); // User cancelled code prompt
+        setIsSigningIn(false); // User cancelled or there was an issue
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Cleanup the verifier if it exists.
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = undefined;
+      }
       handleSignInError(error, 'Phone');
     }
   };
@@ -160,7 +166,8 @@ export default function LoginPage() {
           </Button>
         </CardContent>
       </Card>
-      <div id="recaptcha-container" ref={recaptchaContainerRef}></div>
+      {/* This container is essential for the invisible reCAPTCHA */}
+      <div ref={recaptchaContainerRef}></div>
     </div>
   );
 }
