@@ -69,7 +69,6 @@ function SubmissionsList() {
                 operation: 'delete',
             });
             errorEmitter.emit('permission-error', permissionError);
-            console.error("Error removing document: ", error);
         })
         .finally(() => {
             setIsDeleting(null);
