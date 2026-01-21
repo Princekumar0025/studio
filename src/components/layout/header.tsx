@@ -95,6 +95,7 @@ export function Header() {
     { href: "/store", label: "Store" },
     { href: "/subscription", label: "Subscription" },
     { href: "/contact", label: "Contact" },
+    { href: "/feedback", label: "Feedback" },
   ];
   const pathname = usePathname();
 
