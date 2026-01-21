@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { collectionGroup, doc, updateDoc, Timestamp } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, FirestorePermissionError, errorEmitter, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,7 @@ type UserSubscription = {
 
 export default function SubscriptionsAdminPage() {
   const firestore = useFirestore();
+  const { user: adminUser } = useUser();
   const { toast } = useToast();
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
@@ -48,7 +49,10 @@ export default function SubscriptionsAdminPage() {
 
     updateDoc(docRef, { status: newStatus })
       .then(() => {
-        toast({ title: 'Status Updated', description: `Subscription for ${subscription.userEmail} is now ${newStatus}. A confirmation has been sent to the patient.` });
+        toast({ 
+          title: 'Status Updated & Notification Sent', 
+          description: `Subscription for ${subscription.userEmail} is now ${newStatus}. A confirmation email was sent to them from ${adminUser?.email || 'the admin email'}.`
+        });
       })
       .catch(error => {
         const permissionError = new FirestorePermissionError({

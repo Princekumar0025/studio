@@ -122,7 +122,7 @@ export default function SubscriptionPage() {
     addDoc(newSubscriptionRef, subscriptionData).then(() => {
         toast({
             title: "Subscription Successful!",
-            description: `You are now subscribed to the "${plan.name}" plan.`,
+            description: `You are now subscribed to the "${plan.name}" plan. A confirmation email has been sent to ${user.email}.`,
         });
     }).catch((error) => {
         const permissionError = new FirestorePermissionError({
@@ -225,5 +225,4 @@ export default function SubscriptionPage() {
     </div>
   );
 }
-
     
