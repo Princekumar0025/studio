@@ -22,6 +22,7 @@ import {
   BookHeart,
   Award,
   CreditCard,
+  Settings,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -40,6 +41,7 @@ const navItems = [
   { href: '/admin/plans', label: 'Plans', icon: Award },
   { href: '/admin/subscriptions', label: 'Subscriptions', icon: CreditCard },
   { href: '/admin/contact', label: 'Messages', icon: Mail },
+  { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
 function AdminHeader() {
@@ -144,5 +146,3 @@ export default function AdminLayout({
     </SidebarProvider>
   );
 }
-
-    
