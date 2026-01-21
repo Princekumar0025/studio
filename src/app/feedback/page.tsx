@@ -1,6 +1,7 @@
 'use client';
 
 import { FeedbackForm } from './_components/feedback-form';
+import { GoogleReviews } from './_components/google-reviews';
 import {
   collection,
   query,
@@ -17,6 +18,7 @@ import {
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Star } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Feedback = {
   id: string;
@@ -114,7 +116,18 @@ export default function FeedbackPage() {
             </div>
              <div className="max-w-xl">
                  <h2 className="font-headline text-3xl font-bold mb-8">What Our Patients Say</h2>
-                 <FeedbackList />
+                 <Tabs defaultValue="patient-feedback" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="patient-feedback">From Our Patients</TabsTrigger>
+                        <TabsTrigger value="google-reviews">From Google</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="patient-feedback" className="pt-6">
+                        <FeedbackList />
+                    </TabsContent>
+                    <TabsContent value="google-reviews" className="pt-6">
+                        <GoogleReviews />
+                    </TabsContent>
+                 </Tabs>
             </div>
         </div>
       </div>
