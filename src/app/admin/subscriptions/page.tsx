@@ -12,7 +12,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Skeleton } from '@/components/ui/skeleton';
 import { MoreHorizontal, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 
@@ -127,8 +126,8 @@ export default function SubscriptionsAdminPage() {
                       <TableCell className="text-muted-foreground">{sub.planName}</TableCell>
                       <TableCell className="text-center">
                           <Badge 
-                            variant={status === 'active' ? 'default' : (status === 'expired' ? 'secondary' : 'destructive')} 
-                            className={cn("capitalize", status === 'active' && "bg-green-600")}
+                            variant={status === 'active' ? 'success' : (status === 'expired' ? 'secondary' : 'destructive')}
+                            className="capitalize"
                           >
                               {status}
                           </Badge>

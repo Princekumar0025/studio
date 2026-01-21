@@ -127,7 +127,7 @@ export default function AccountPage() {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-lg font-bold">${activeSubscription.price.toFixed(2)}<span className="text-sm font-normal text-muted-foreground">/month</span></p>
-                                         <Badge className="capitalize mt-1 bg-green-600">Active</Badge>
+                                         <Badge variant="success" className="capitalize mt-1">Active</Badge>
                                     </div>
                                 </div>
                             ) : (
