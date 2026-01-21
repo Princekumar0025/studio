@@ -41,18 +41,22 @@ export default function PatientLoginPage() {
 
   useEffect(() => {
     if (!auth) return;
-    if (window.recaptchaVerifier) window.recaptchaVerifier.clear();
-    
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+
+    // Create a new verifier instance for this effect execution.
+    const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
       'size': 'invisible',
       'callback': (response: any) => {
-        // reCAPTCHA solved, allow signInWithPhoneNumber.
-      }
+        // This callback is executed when the reCAPTCHA is solved.
+      },
     });
+
+    // Assign it to the window object so it can be used by signInWithPhoneNumber
+    window.recaptchaVerifier = verifier;
+
+    // Return a cleanup function that clears this specific verifier instance.
+    // This will be called when the component unmounts or before the effect runs again.
     return () => {
-        if(window.recaptchaVerifier) {
-            window.recaptchaVerifier.clear();
-        }
+      verifier.clear();
     };
   }, [auth]);
 
