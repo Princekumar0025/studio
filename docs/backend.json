@@ -1,5 +1,30 @@
 {
   "entities": {
+    "ContactInformation": {
+      "title": "Contact Information",
+      "type": "object",
+      "description": "Stores the primary contact details for the business.",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Primary contact email address."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Primary contact phone number."
+        },
+        "address": {
+          "type": "string",
+          "description": "Physical address of the business."
+        }
+      },
+      "required": [
+        "email",
+        "phone",
+        "address"
+      ]
+    },
     "SubscriptionPlan": {
       "title": "Subscription Plan",
       "type": "object",
@@ -400,6 +425,22 @@
   "firestore": {
     "structure": [
       {
+        "path": "/contactInformation/{docId}",
+        "definition": {
+          "entityName": "ContactInformation",
+          "schema": {
+            "$ref": "#/backend/entities/ContactInformation"
+          },
+          "description": "Stores the business's main contact details. Expects a single document with a known ID like 'main'.",
+          "params": [
+            {
+              "name": "docId",
+              "description": "The unique identifier for the contact information document (e.g., 'main')."
+            }
+          ]
+        }
+      },
+      {
         "path": "/socialLinks/{linkId}",
         "definition": {
           "entityName": "SocialLink",
@@ -591,5 +632,3 @@
     "reasoning": "The Firestore structure is designed to efficiently manage physiotherapy-related data while prioritizing security and scalability. It leverages path-based ownership and structural segregation to simplify security rules and ensure data integrity.  Therapist, Condition, and TreatmentGuide data are stored in root-level collections, intended to be globally available. Appointments are stored within a therapist's document for easy retrieval. ContactFormSubmissions are stored in a dedicated collection for review. A dedicated `admins` collection is used to manage user privileges for administrative tasks. \n\nAuthorization Independence is achieved by not relying on `get()` calls in security rules, except for checking admin status. Data requiring specific access controls (e.g., user-specific data, collaborative content) would need to denormalize authorization-related data into the documents themselves.\n\nThis structure supports QAPs by:\n\n*   Segregating data based on access requirements. Public data (Therapists, Conditions, TreatmentGuides) are stored separately from potentially private data (Appointments, ContactFormSubmissions).\n*   Leveraging path-based ownership for user-specific data, enabling secure list operations based on user ID.\n*   Providing a clear and secure mechanism for admin-level access control."
   }
 }
-
-    

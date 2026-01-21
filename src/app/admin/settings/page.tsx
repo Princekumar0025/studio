@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
+import { useState, useEffect } from 'react';
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
 import { collection, doc, setDoc, addDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from '@/components/ui/textarea';
 
 const emailSchema = z.object({
   email: z.string().email('Invalid email address.'),
@@ -170,6 +171,104 @@ function SocialLinksManager() {
   )
 }
 
+const contactInfoSchema = z.object({
+  email: z.string().email('Invalid email address.'),
+  phone: z.string().min(1, 'Phone number is required.'),
+  address: z.string().min(1, 'Address is required.'),
+});
+
+function ContactInfoManager() {
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const docRef = useMemoFirebase(() => firestore ? doc(firestore, 'contactInformation', 'main') : null, [firestore]);
+  const { data: contactInfo, isLoading: isLoadingInfo } = useDoc<z.infer<typeof contactInfoSchema>>(docRef);
+
+  const form = useForm<z.infer<typeof contactInfoSchema>>({
+    resolver: zodResolver(contactInfoSchema),
+    defaultValues: { email: '', phone: '', address: '' },
+  });
+
+  useEffect(() => {
+    if (contactInfo) {
+      form.reset(contactInfo);
+    }
+  }, [contactInfo, form]);
+  
+  const onSubmit = async (data: z.infer<typeof contactInfoSchema>) => {
+    if (!docRef) return;
+    setIsSubmitting(true);
+    try {
+      await setDoc(docRef, data, { merge: true });
+      toast({ title: 'Success', description: 'Contact information updated.' });
+    } catch (error) {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'update', requestResourceData: data }));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+     <Card>
+        <CardHeader>
+            <CardTitle>Business Contact Information</CardTitle>
+            <CardDescription>Update the contact details displayed on the contact page.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            {isLoadingInfo ? <Skeleton className="h-48 w-full" /> : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save Contact Info
+                </Button>
+              </form>
+            </Form>
+            )}
+        </CardContent>
+    </Card>
+  )
+}
 
 // Main Page Component
 export default function SettingsPage() {
@@ -364,6 +463,8 @@ export default function SettingsPage() {
             </Card>
         )}
         
+        <ContactInfoManager />
+
         <SocialLinksManager />
 
         <Card>
