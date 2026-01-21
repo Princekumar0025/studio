@@ -7,6 +7,7 @@ import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
   ConfirmationResult,
+  User,
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -19,8 +20,8 @@ import { useToast } from '@/hooks/use-toast';
 
 declare global {
     interface Window {
-        recaptchaVerifier: RecaptchaVerifier;
-        confirmationResult: ConfirmationResult;
+        recaptchaVerifier?: RecaptchaVerifier;
+        confirmationResult?: ConfirmationResult;
     }
 }
 
@@ -29,6 +30,8 @@ const GoogleIcon = () => (
         <path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 110.3 512 0 401.7 0 265.9c0-69.2 28.1-131.7 73.4-175.4C118.8 46.1 178.6 22 244 22c59.3 0 112.5 22.1 151.3 58.9l-49.1 49.1c-26.6-25.2-62.7-39.2-102.2-39.2-74.9 0-136.1 61.2-136.1 136.1s61.2 136.1 136.1 136.1c86.2 0 119.5-62.8 123.5-93.5H244v-64.8h244z"></path>
     </svg>
 );
+
+const ADMIN_UID = 'nvZWlJOeBHdojcfXC9ODKMJwky12';
 
 export default function PatientLoginPage() {
   const auth = useAuth();
@@ -42,28 +45,27 @@ export default function PatientLoginPage() {
   useEffect(() => {
     if (!auth) return;
 
-    // Create a new verifier instance for this effect execution.
-    const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      'size': 'invisible',
-      'callback': (response: any) => {
-        // This callback is executed when the reCAPTCHA is solved.
-      },
-    });
-
-    // Assign it to the window object so it can be used by signInWithPhoneNumber
-    window.recaptchaVerifier = verifier;
-
-    // Return a cleanup function that clears this specific verifier instance.
-    // This will be called when the component unmounts or before the effect runs again.
+    if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'invisible',
+            'callback': (response: any) => {},
+        });
+    }
+    
     return () => {
-      verifier.clear();
+        // Don't clear verifier here as it causes issues with React strict mode.
+        // It will be managed within the component lifecycle.
     };
   }, [auth]);
 
-  const handleSignInSuccess = () => {
+  const handleSignInSuccess = (user: User) => {
     setIsSigningIn(false);
     toast({ title: "Login Successful", description: "You are now logged in."})
-    router.push('/account');
+    if (user.uid === ADMIN_UID) {
+        router.push('/admin/dashboard');
+    } else {
+        router.push('/account');
+    }
   };
 
   const handleSignInError = (error: any) => {
@@ -119,8 +121,8 @@ export default function PatientLoginPage() {
     setIsSigningIn(true);
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      handleSignInSuccess();
+      const userCredential = await signInWithPopup(auth, provider);
+      handleSignInSuccess(userCredential.user);
     } catch (error) {
       handleSignInError(error);
     }
@@ -128,7 +130,7 @@ export default function PatientLoginPage() {
 
   const handlePhoneSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || isSigningIn || !phoneNumber) return;
+    if (!auth || isSigningIn || !phoneNumber || !window.recaptchaVerifier) return;
     setIsSigningIn(true);
     const appVerifier = window.recaptchaVerifier;
     try {
@@ -147,8 +149,8 @@ export default function PatientLoginPage() {
     if (!window.confirmationResult || isSigningIn || !verificationCode) return;
     setIsSigningIn(true);
     try {
-        await window.confirmationResult.confirm(verificationCode);
-        handleSignInSuccess();
+        const userCredential = await window.confirmationResult.confirm(verificationCode);
+        handleSignInSuccess(userCredential.user);
     } catch (error) {
         handleSignInError(error);
     }

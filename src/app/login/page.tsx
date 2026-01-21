@@ -4,6 +4,7 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  User,
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,8 @@ const GoogleIcon = () => (
     </svg>
 );
 
+const ADMIN_UID = 'nvZWlJOeBHdojcfXC9ODKMJwky12';
+
 export default function LoginPage() {
   const auth = useAuth();
   const router = useRouter();
@@ -28,9 +31,19 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSignInSuccess = () => {
+  const handleSignInSuccess = (user: User) => {
     setIsSigningIn(false);
-    router.push('/admin/dashboard');
+    if (user.uid === ADMIN_UID) {
+      router.push('/admin/dashboard');
+    } else {
+      auth?.signOut();
+      toast({
+        variant: 'destructive',
+        title: 'Access Denied',
+        description: 'You are not an authorized administrator. Please use the patient login if you are a patient.',
+        duration: 9000,
+      });
+    }
   };
 
   const handleSignInError = (error: any) => {
@@ -77,8 +90,8 @@ export default function LoginPage() {
     if (!auth || isSigningIn || !email || !password) return;
     setIsSigningIn(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      handleSignInSuccess();
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      handleSignInSuccess(userCredential.user);
     } catch (error) {
       handleSignInError(error);
     }
@@ -89,8 +102,8 @@ export default function LoginPage() {
     setIsSigningIn(true);
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      handleSignInSuccess();
+      const userCredential = await signInWithPopup(auth, provider);
+      handleSignInSuccess(userCredential.user);
     } catch (error) {
       handleSignInError(error);
     }

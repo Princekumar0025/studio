@@ -18,9 +18,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const ADMIN_UID = 'nvZWlJOeBHdojcfXC9ODKMJwky12';
+
 function UserNav() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const isAdmin = user?.uid === ADMIN_UID;
 
   if (isUserLoading) {
     return <Skeleton className="h-8 w-8 rounded-full" />;
@@ -47,7 +50,7 @@ function UserNav() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.displayName || "Patient"}</p>
+            <p className="text-sm font-medium leading-none">{user.displayName || (isAdmin ? "Admin" : "Patient")}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>
@@ -57,9 +60,11 @@ function UserNav() {
         <DropdownMenuItem asChild>
            <Link href="/account">My Account</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-           <Link href="/admin/dashboard">Admin Dashboard</Link>
-        </DropdownMenuItem>
+        {isAdmin && (
+          <DropdownMenuItem asChild>
+            <Link href="/admin/dashboard">Admin Dashboard</Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => auth?.signOut()}>
           Log out
