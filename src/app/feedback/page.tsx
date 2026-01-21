@@ -104,18 +104,20 @@ export default function FeedbackPage() {
   return (
     <div className="bg-background">
       <div className="container py-12 md:py-20">
-        <div className="grid lg:grid-cols-2 gap-16 items-start">
-            <div className="max-w-xl">
-                <div className="text-left mb-10">
-                    <h1 className="font-headline text-4xl md:text-5xl font-bold">Share Your Experience</h1>
-                    <p className="mt-4 text-lg text-muted-foreground">
-                        Your feedback helps us improve our services. Please let us know how we did.
-                    </p>
-                </div>
+        <div className="text-center max-w-3xl mx-auto mb-12">
+            <h1 className="font-headline text-4xl md:text-5xl font-bold">Share Your Experience</h1>
+            <p className="mt-4 text-lg text-muted-foreground">
+                Your feedback helps us improve our services. We value your opinion and appreciate you taking the time to share it with us.
+            </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start max-w-7xl mx-auto">
+            <div className="w-full">
+                <h2 className="font-headline text-3xl font-bold mb-8 text-center lg:text-left">Leave a Review</h2>
                 <FeedbackForm />
             </div>
-             <div className="max-w-xl">
-                 <h2 className="font-headline text-3xl font-bold mb-8">What Our Patients Say</h2>
+             <div className="w-full">
+                 <h2 className="font-headline text-3xl font-bold mb-8 text-center lg:text-left">What Our Patients Say</h2>
                  <Tabs defaultValue="patient-feedback" className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="patient-feedback">From Our Patients</TabsTrigger>
