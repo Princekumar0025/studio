@@ -1,5 +1,58 @@
+'use client';
 import Link from "next/link";
 import { Stethoscope, Twitter, Instagram, Facebook } from "lucide-react";
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
+
+type SocialLink = {
+  id: string;
+  platform: 'twitter' | 'facebook' | 'instagram';
+  url: string;
+}
+
+const socialIcons: { [key in SocialLink['platform']]: React.ComponentType<{ className?: string }> } = {
+  twitter: Twitter,
+  facebook: Facebook,
+  instagram: Instagram,
+};
+
+function DynamicSocialLinks() {
+    const firestore = useFirestore();
+    const socialLinksCollection = useMemoFirebase(() => firestore ? collection(firestore, 'socialLinks') : null, [firestore]);
+    const { data: socialLinks, isLoading } = useCollection<SocialLink>(socialLinksCollection);
+
+    if (isLoading) {
+        return (
+            <div className="flex gap-4">
+                <Skeleton className="h-5 w-5 rounded-full" />
+                <Skeleton className="h-5 w-5 rounded-full" />
+                <Skeleton className="h-5 w-5 rounded-full" />
+            </div>
+        );
+    }
+
+    if (!socialLinks || socialLinks.length === 0) {
+        return null;
+    }
+    
+    // Ensure we only render one of each platform, just in case.
+    const uniquePlatforms = Array.from(new Map(socialLinks.map(link => [link.platform, link])).values());
+
+    return (
+        <div className="flex gap-4">
+            {uniquePlatforms.map((link) => {
+                const Icon = socialIcons[link.platform];
+                if (!Icon) return null;
+                return (
+                    <Link key={link.id} href={link.url} aria-label={link.platform} target="_blank" rel="noopener noreferrer">
+                        <Icon className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
+                    </Link>
+                );
+            })}
+        </div>
+    );
+}
 
 export function Footer() {
   return (
@@ -12,17 +65,7 @@ export function Footer() {
               <span className="font-headline text-xl font-bold">PhysioGuide</span>
             </Link>
             <p className="text-sm text-muted-foreground">Your expert partner in pain recovery and physical wellness.</p>
-            <div className="flex gap-4">
-              <Link href="#" aria-label="Twitter">
-                <Twitter className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
-              </Link>
-              <Link href="#" aria-label="Facebook">
-                <Facebook className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
-              </Link>
-              <Link href="#" aria-label="Instagram">
-                <Instagram className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
-              </Link>
-            </div>
+            <DynamicSocialLinks />
           </div>
           <div className="md:col-start-3 flex flex-col gap-2">
             <h4 className="font-headline font-semibold">Quick Links</h4>

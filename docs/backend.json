@@ -286,6 +286,26 @@
         "timeSlots"
       ]
     },
+    "SocialLink": {
+      "title": "Social Link",
+      "type": "object",
+      "description": "Represents a social media link for the website.",
+      "properties": {
+        "platform": {
+          "type": "string",
+          "description": "Name of the social media platform (e.g., 'twitter', 'facebook', 'instagram')."
+        },
+        "url": {
+          "type": "string",
+          "description": "The full URL of the social media profile.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "platform",
+        "url"
+      ]
+    },
     "UserSubscription": {
       "title": "User Subscription",
       "type": "object",
@@ -345,6 +365,22 @@
   },
   "firestore": {
     "structure": [
+      {
+        "path": "/socialLinks/{linkId}",
+        "definition": {
+          "entityName": "SocialLink",
+          "schema": {
+            "$ref": "#/backend/entities/SocialLink"
+          },
+          "description": "Stores social media links for the website footer.",
+          "params": [
+            {
+              "name": "linkId",
+              "description": "Unique identifier for the social link."
+            }
+          ]
+        }
+      },
       {
         "path": "/subscriptionPlans/{planId}",
         "definition": {

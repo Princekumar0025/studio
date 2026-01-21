@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
+import { collection, doc, setDoc, addDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,8 +12,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { updateEmail, updatePassword, GoogleAuthProvider, linkWithPopup, unlink } from 'firebase/auth';
-import { Loader2, KeyRound } from 'lucide-react';
+import { Loader2, KeyRound, Twitter, Facebook, Instagram, Trash2, PlusCircle, Save } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const emailSchema = z.object({
   email: z.string().email('Invalid email address.'),
@@ -26,6 +34,144 @@ const passwordSchema = z.object({
   path: ['confirmPassword'],
 });
 
+
+// Social Links Component
+type SocialLink = {
+  id: string;
+  platform: 'twitter' | 'facebook' | 'instagram';
+  url: string;
+};
+
+const socialIcons: { [key in SocialLink['platform']]: React.ReactNode } = {
+  twitter: <Twitter className="h-5 w-5" />,
+  facebook: <Facebook className="h-5 w-5" />,
+  instagram: <Instagram className="h-5 w-5" />,
+};
+
+function SocialLinksManager() {
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  
+  const socialLinksCollection = useMemoFirebase(() => firestore ? collection(firestore, 'socialLinks') : null, [firestore]);
+  const { data: socialLinks, isLoading } = useCollection<SocialLink>(socialLinksCollection);
+  
+  const [newPlatform, setNewPlatform] = useState<'twitter' | 'facebook' | 'instagram' | ''>('');
+  const [newUrl, setNewUrl] = useState('');
+  const [editingUrl, setEditingUrl] = useState<{[key: string]: string}>({});
+  const [isAdding, setIsAdding] = useState(false);
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
+
+  const handleUpdate = async (link: SocialLink) => {
+    if (!firestore || !editingUrl[link.id]) return;
+    setIsUpdating(link.id);
+    const docRef = doc(firestore, 'socialLinks', link.id);
+    try {
+      await setDoc(docRef, { url: editingUrl[link.id] }, { merge: true });
+      toast({ title: 'Success', description: `${link.platform} link updated.` });
+      setEditingUrl(prev => ({...prev, [link.id]: ''}));
+    } catch (error) {
+       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'update', requestResourceData: { url: editingUrl[link.id] } }));
+    } finally {
+        setIsUpdating(null);
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!firestore) return;
+    const docRef = doc(firestore, 'socialLinks', id);
+    try {
+        await deleteDoc(docRef);
+        toast({ title: 'Success', description: 'Social link deleted.' });
+    } catch(error) {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'delete' }));
+    }
+  }
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firestore || !newPlatform || !newUrl || !socialLinksCollection) return;
+
+    if (socialLinks?.some(link => link.platform === newPlatform)) {
+      toast({ variant: 'destructive', title: 'Error', description: `A link for ${newPlatform} already exists.` });
+      return;
+    }
+    
+    setIsAdding(true);
+    const newLink = { platform: newPlatform, url: newUrl };
+
+    try {
+        await addDoc(socialLinksCollection, newLink);
+        toast({ title: 'Success', description: 'New social link added.'});
+        setNewPlatform('');
+        setNewUrl('');
+    } catch (error) {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: socialLinksCollection.path, operation: 'create', requestResourceData: newLink }));
+    } finally {
+        setIsAdding(false);
+    }
+  }
+  
+  return (
+    <Card>
+        <CardHeader>
+            <CardTitle>Social Media Links</CardTitle>
+            <CardDescription>Manage the social media links displayed in the website footer.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            {isLoading && <Skeleton className="h-10 w-full" />}
+            {socialLinks && socialLinks.map(link => (
+                <div key={link.id} className="flex items-center gap-2">
+                    <div className="p-2 bg-muted rounded-md">{socialIcons[link.platform]}</div>
+                    <Input 
+                        defaultValue={link.url}
+                        onChange={e => setEditingUrl(prev => ({...prev, [link.id]: e.target.value}))}
+                        placeholder="https://..."
+                    />
+                    <Button variant="ghost" size="icon" onClick={() => handleUpdate(link)} disabled={isUpdating === link.id || !editingUrl[link.id] || editingUrl[link.id] === link.url}>
+                        {isUpdating === link.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    </Button>
+                    <Button variant="destructive" size="icon" onClick={() => handleDelete(link.id)}>
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+            ))}
+             {!isLoading && (!socialLinks || socialLinks.length === 0) && (
+                <p className="text-sm text-muted-foreground text-center py-4">No social links added yet.</p>
+             )}
+        </CardContent>
+        <CardHeader className="pt-0">
+             <CardTitle className="text-lg">Add New Link</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-2">
+                 <Select value={newPlatform} onValueChange={(value) => setNewPlatform(value as any)}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Select platform" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="twitter">Twitter</SelectItem>
+                        <SelectItem value="facebook">Facebook</SelectItem>
+                        <SelectItem value="instagram">Instagram</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Input 
+                    value={newUrl}
+                    onChange={e => setNewUrl(e.target.value)}
+                    placeholder="https://twitter.com/your-profile"
+                    className="flex-1"
+                />
+                <Button type="submit" disabled={isAdding || !newPlatform || !newUrl}>
+                    {isAdding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                    <span className="hidden sm:inline">Add Link</span>
+                </Button>
+            </form>
+        </CardContent>
+    </Card>
+  )
+}
+
+
+// Main Page Component
 export default function SettingsPage() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
@@ -217,6 +363,8 @@ export default function SettingsPage() {
             </CardContent>
             </Card>
         )}
+        
+        <SocialLinksManager />
 
         <Card>
             <CardHeader>
