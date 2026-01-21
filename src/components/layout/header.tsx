@@ -31,9 +31,19 @@ function UserNav() {
 
   if (!user) {
     return (
-      <Button asChild>
-        <Link href="/patient-login">Login</Link>
-      </Button>
+       <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button>Login</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-40" align="end">
+          <DropdownMenuItem asChild>
+            <Link href="/patient-login">Patient Portal</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/login">Admin Login</Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     )
   }
 
