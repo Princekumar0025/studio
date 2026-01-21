@@ -23,6 +23,7 @@ import {
   Award,
   CreditCard,
   Settings,
+  MessageSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -41,6 +42,7 @@ const navItems = [
   { href: '/admin/plans', label: 'Plans', icon: Award },
   { href: '/admin/subscriptions', label: 'Subscriptions', icon: CreditCard },
   { href: '/admin/contact', label: 'Messages', icon: Mail },
+  { href: '/admin/feedback', label: 'Feedback', icon: MessageSquare },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -146,3 +148,5 @@ export default function AdminLayout({
     </SidebarProvider>
   );
 }
+
+    

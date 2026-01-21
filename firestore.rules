@@ -33,6 +33,12 @@ service cloud.firestore {
       allow update: if false;
     }
 
+    match /feedback/{feedbackId} {
+      allow create: if true;
+      allow get, list, delete: if request.auth != null;
+      allow update: if false;
+    }
+
     match /therapists/{therapistId} {
       allow get, list: if true;
       allow write: if request.auth != null;
@@ -70,3 +76,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
