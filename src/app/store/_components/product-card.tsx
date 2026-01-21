@@ -24,20 +24,20 @@ export function ProductCard({ product }: ProductCardProps) {
   }
 
   return (
-    <Card className="flex flex-col overflow-hidden shadow-lg border-2 h-full">
-      <div className="relative h-60 w-full">
+    <Card className="flex flex-col overflow-hidden h-full">
+      <div className="relative h-60 w-full overflow-hidden">
         {image && (
           <Image
             src={image.imageUrl}
             alt={product.name}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
             data-ai-hint={image.imageHint}
           />
         )}
       </div>
       <CardHeader>
-        <CardTitle className="font-headline text-xl h-12">{product.name}</CardTitle>
+        <CardTitle className="font-headline text-xl min-h-[3rem]">{product.name}</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow">
         <p className="text-muted-foreground text-sm">{product.description}</p>

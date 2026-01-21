@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 type Therapist = {
   id: string;
@@ -19,11 +20,11 @@ type Therapist = {
 
 function TeamLoadingSkeleton() {
     return (
-        <div className="grid grid-cols-1 gap-12">
+        <div className="space-y-12">
             {[...Array(2)].map((_, i) => (
-                <Card key={i} className="overflow-hidden shadow-lg border-2">
+                <Card key={i} className="overflow-hidden">
                     <div className="grid md:grid-cols-5 items-center">
-                        <div className="md:col-span-2 relative w-full h-80 md:h-full">
+                        <div className="md:col-span-2 relative w-full h-80 md:h-full min-h-[300px]">
                             <Skeleton className="h-full w-full" />
                         </div>
                         <div className="md:col-span-3 p-8 md:p-12 space-y-4">
@@ -32,7 +33,7 @@ function TeamLoadingSkeleton() {
                             <Skeleton className="h-4 w-full" />
                             <Skeleton className="h-4 w-full" />
                             <Skeleton className="h-4 w-5/6" />
-                            <div className="mt-6 space-y-2">
+                            <div className="mt-6 pt-4 space-y-2">
                                 <Skeleton className="h-5 w-1/4" />
                                 <div className="flex gap-2">
                                     <Skeleton className="h-6 w-20" />
@@ -54,7 +55,7 @@ export default function TeamPage() {
 
   return (
     <div className="container py-12 md:py-20">
-      <div className="text-center max-w-3xl mx-auto mb-12">
+      <div className="text-center max-w-3xl mx-auto mb-16">
         <h1 className="font-headline text-4xl md:text-5xl font-bold">Meet Our Experts</h1>
         <p className="mt-4 text-lg text-muted-foreground">
           Our team of highly qualified and compassionate therapists is here to guide you on your journey to recovery and wellness.
@@ -64,14 +65,17 @@ export default function TeamPage() {
       {isLoading && <TeamLoadingSkeleton />}
 
       {!isLoading && therapists && (
-        <div className="grid grid-cols-1 gap-12">
+        <div className="space-y-12">
             {therapists.map((therapist, index) => {
             const image = PlaceHolderImages.find(p => p.id === therapist.imageId);
             const isReversed = index % 2 !== 0;
             return (
-                <Card key={therapist.id} className="overflow-hidden shadow-lg border-2">
-                <div className={`grid md:grid-cols-5 items-center`}>
-                    <div className={`md:col-span-2 relative w-full h-80 md:h-full ${isReversed ? 'md:order-last' : ''}`}>
+                <Card key={therapist.id} className="overflow-hidden">
+                <div className={cn('grid md:grid-cols-5 items-center')}>
+                    <div className={cn(
+                        'md:col-span-2 relative w-full h-80 md:h-full min-h-[300px]',
+                         isReversed && 'md:order-last'
+                    )}>
                     {image && (
                         <Image
                         src={image.imageUrl}
@@ -87,10 +91,10 @@ export default function TeamPage() {
                         <CardTitle className="font-headline text-3xl">{therapist.name}</CardTitle>
                         <CardDescription className="text-primary font-bold text-md pt-1">{therapist.title}</CardDescription>
                     </CardHeader>
-                    <CardContent className="p-0 mt-4">
+                    <CardContent className="p-0 mt-6">
                         <p className="text-muted-foreground">{therapist.bio}</p>
-                        <div className="mt-6">
-                        <h4 className="font-semibold mb-2">Specializations:</h4>
+                        <div className="mt-6 pt-6 border-t">
+                        <h4 className="font-semibold mb-3">Specializations:</h4>
                         <div className="flex flex-wrap gap-2">
                             {therapist.specializations.map(spec => (
                             <Badge key={spec} variant="secondary">{spec}</Badge>

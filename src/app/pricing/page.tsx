@@ -64,8 +64,8 @@ export default function PricingPage() {
   return (
     <div className="bg-background">
       <div className="container py-12 md:py-20">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <h1 className="font-headline text-4xl md:text-5xl font-bold">Our Plans</h1>
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h1 className="font-headline text-4xl md:text-5xl font-bold">Flexible Plans for Your Needs</h1>
           <p className="mt-4 text-lg text-muted-foreground">
             Choose a plan that fits your recovery goals. Consistent care for better, faster results.
           </p>
@@ -74,30 +74,30 @@ export default function PricingPage() {
         {isLoading && <PricingLoadingSkeleton />}
 
         {!isLoading && sortedPlans && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center max-w-6xl mx-auto">
             {sortedPlans.map((plan) => (
                 <Card 
                     key={plan.id}
                     className={cn(
-                        "flex flex-col h-full shadow-lg border-2 transition-all",
-                        plan.isFeatured ? "border-primary scale-105 bg-card" : "border-border"
+                        "flex flex-col h-full border-2",
+                        plan.isFeatured ? "border-primary lg:scale-110" : "border-border"
                     )}
                 >
                 {plan.isFeatured && (
-                    <Badge className="absolute -top-3 right-4 flex items-center gap-1">
+                    <Badge className="absolute -top-3.5 right-6 flex items-center gap-1">
                         <Star className="h-3 w-3" /> Most Popular
                     </Badge>
                 )}
-                <CardHeader className="p-6">
+                <CardHeader className="p-8">
                     <CardTitle className="font-headline text-2xl text-primary">{plan.name}</CardTitle>
-                    <CardDescription className="pt-1">{plan.description}</CardDescription>
+                    <CardDescription className="pt-1 h-10">{plan.description}</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1 p-6 space-y-6">
+                <CardContent className="flex-1 p-8 pt-0 space-y-6">
                     <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold">${plan.price}</span>
+                        <span className="text-5xl font-bold">${plan.price}</span>
                         <span className="text-muted-foreground">/month</span>
                     </div>
-                    <ul className="space-y-3 text-sm">
+                    <ul className="space-y-4 text-sm">
                     {plan.features.map((feature, index) => (
                         <li key={index} className="flex items-start gap-3">
                             <Check className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
@@ -106,10 +106,10 @@ export default function PricingPage() {
                     ))}
                     </ul>
                 </CardContent>
-                <CardFooter className="p-6">
+                <CardFooter className="p-8">
                     <Button 
                         size="lg" 
-                        className="w-full" 
+                        className="w-full transition-transform hover:scale-105" 
                         variant={plan.isFeatured ? "default" : "outline"}
                         onClick={() => handleSubscribe(plan.name)}
                     >
