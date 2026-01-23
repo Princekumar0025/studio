@@ -26,17 +26,15 @@ function MeetTheTeamSection() {
 
     if (isLoading) {
         return (
-            <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                {[...Array(2)].map((_, i) => (
-                    <div key={i} className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-background rounded-lg">
-                        <Skeleton className="h-24 w-24 rounded-full" />
-                        <div className="space-y-2">
-                           <Skeleton className="h-6 w-40" />
-                           <Skeleton className="h-5 w-24" />
-                           <Skeleton className="h-4 w-48" />
-                        </div>
+            <div className="mt-12 flex justify-center">
+                <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-background rounded-lg max-w-xl">
+                    <Skeleton className="h-24 w-24 rounded-full" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-6 w-40" />
+                        <Skeleton className="h-5 w-24" />
+                        <Skeleton className="h-4 w-48" />
                     </div>
-                ))}
+                </div>
             </div>
         )
     }
@@ -44,27 +42,30 @@ function MeetTheTeamSection() {
     if (!therapists || therapists.length === 0) {
         return null; // Don't show the section if no therapists
     }
+    
+    const featuredTherapist = therapists.find(t => t.imageId === 'caleb-burgess') || therapists[0];
+    
+    if (!featuredTherapist) {
+        return null;
+    }
+
+    const image = PlaceHolderImages.find(p => p.id === featuredTherapist.imageId);
 
     return (
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        {therapists.map(therapist => {
-            const image = PlaceHolderImages.find(p => p.id === therapist.imageId);
-            return (
-            <div key={therapist.id} className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-background rounded-lg">
+        <div className="mt-12 flex justify-center">
+            <div key={featuredTherapist.id} className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-background rounded-lg max-w-xl transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
                 {image && (
                     <Avatar className="h-24 w-24">
-                    <AvatarImage src={image.imageUrl} alt={therapist.name} data-ai-hint={image.imageHint} />
-                    <AvatarFallback>{therapist.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={image.imageUrl} alt={featuredTherapist.name} data-ai-hint={image.imageHint} />
+                    <AvatarFallback>{featuredTherapist.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                 )}
                 <div className="text-center sm:text-left">
-                <h3 className="font-headline text-xl font-bold">{therapist.name}</h3>
-                <p className="text-primary font-semibold">{therapist.title}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{therapist.specializations.join(', ')}</p>
+                <h3 className="font-headline text-xl font-bold">{featuredTherapist.name}</h3>
+                <p className="text-primary font-semibold">{featuredTherapist.title}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{featuredTherapist.specializations.join(', ')}</p>
                 </div>
             </div>
-            );
-        })}
         </div>
     )
 }
