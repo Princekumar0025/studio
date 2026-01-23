@@ -62,7 +62,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="flex flex-col gap-4">
              <Link href="/" className="flex items-center gap-2">
-                <Image src="https://storage.googleapis.com/studioprompt/c071a257-22be-4e3f-85d8-44585f671c6f_0.png" alt="Manual Physiotherapy Logo" width={200} height={50} className="object-contain" />
+                <Image src="https://i.ibb.co/34wL1YQ/c071a257-22be-4e3f-85d8-44585f671c6f-0.png" alt="Manual Physiotherapy Logo" width={200} height={50} className="object-contain" />
             </Link>
             <p className="text-sm text-muted-foreground">Expert manual physiotherapy for sports injury and rehabilitation.</p>
             <DynamicSocialLinks />

@@ -115,7 +115,7 @@ export default function AdminLayout({
         <SidebarContent>
           <SidebarGroup>
             <Link href="/admin/dashboard" className="flex items-center gap-2 p-2">
-              <Image src="https://storage.googleapis.com/studioprompt/c071a257-22be-4e3f-85d8-44585f671c6f_0.png" alt="Manual Physiotherapy Logo" width={180} height={45} className="object-contain" />
+              <Image src="https://i.ibb.co/34wL1YQ/c071a257-22be-4e3f-85d8-44585f671c6f-0.png" alt="Manual Physiotherapy Logo" width={180} height={45} className="object-contain" />
             </Link>
           </SidebarGroup>
           <SidebarGroup>
