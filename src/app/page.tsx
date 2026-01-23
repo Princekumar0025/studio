@@ -110,8 +110,8 @@ export default function Home() {
             priority
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/20" />
-        <div className="relative container h-full flex flex-col justify-center text-white">
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/60 to-black/20" />
+        <div className="relative z-20 container h-full flex flex-col justify-center text-white">
           <h1 className="font-headline text-5xl md:text-7xl font-bold max-w-3xl !leading-tight">
             Move Freely, Live Fully.
           </h1>
