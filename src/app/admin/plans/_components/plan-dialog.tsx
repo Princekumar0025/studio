@@ -25,6 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -243,10 +244,16 @@ export function PlanDialog({
               name="imageUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image URL</FormLabel>
+                  <FormLabel>Image</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://example.com/image.jpg" {...field} />
+                    <div className="flex items-center gap-2">
+                        <Input placeholder="https://example.com/image.jpg" {...field} />
+                        <Button type="button" variant="outline" onClick={() => toast({ title: 'Feature coming soon!', description: 'Direct image uploads are not yet supported.' })}>Upload</Button>
+                    </div>
                   </FormControl>
+                  <FormDescription>
+                    Enter an image URL or click "Upload" (feature coming soon).
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -256,10 +263,16 @@ export function PlanDialog({
               name="videoUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Video URL</FormLabel>
+                  <FormLabel>Video</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://youtube.com/watch?v=..." {...field} />
+                    <div className="flex items-center gap-2">
+                        <Input placeholder="https://youtube.com/watch?v=..." {...field} />
+                        <Button type="button" variant="outline" onClick={() => toast({ title: 'Feature coming soon!', description: 'Direct video uploads are not yet supported.' })}>Upload</Button>
+                    </div>
                   </FormControl>
+                  <FormDescription>
+                    Enter a video URL or click "Upload" (feature coming soon).
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
