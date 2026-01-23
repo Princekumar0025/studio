@@ -117,7 +117,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-8 flex items-center gap-3">
-          <Image src="https://i.ibb.co/2nL6bC4/physiotherapy-logo-removebg-preview.png" alt="Manual Physiotherapy Logo" width={40} height={40} />
+          <Image src="https://i.ibb.co/yYvK2g5/physiotherapy-logo-removebg-preview.png" alt="Manual Physiotherapy Logo" width={40} height={40} />
           <span className="text-xl font-bold font-headline hidden sm:inline-block">
             <span className="text-primary">Manual</span> <span className="text-foreground">Physiotherapy</span>
           </span>
@@ -145,7 +145,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="left">
               <Link href="/" className="mr-6 flex items-center gap-3 mb-8">
-                 <Image src="https://i.ibb.co/2nL6bC4/physiotherapy-logo-removebg-preview.png" alt="Manual Physiotherapy Logo" width={40} height={40} />
+                 <Image src="https://i.ibb.co/yYvK2g5/physiotherapy-logo-removebg-preview.png" alt="Manual Physiotherapy Logo" width={40} height={40} />
                  <span className="text-xl font-bold font-headline">
                     <span className="text-primary">Manual</span> <span className="text-foreground">Physiotherapy</span>
                  </span>
