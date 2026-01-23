@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ThemeToggle } from "./theme-toggle";
 
 const ADMIN_UID = 'nvZWlJOeBHdojcfXC9ODKMJwky12';
 
@@ -124,6 +125,7 @@ export function Header() {
           ))}
         </nav>
         <div className="flex flex-1 items-center justify-end gap-2">
+          <ThemeToggle />
           <UserNav />
           <Button variant="outline" size="icon" asChild>
             <Link href="#">
