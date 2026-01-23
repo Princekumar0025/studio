@@ -5,6 +5,8 @@ import {
   signInWithPhoneNumber,
   ConfirmationResult,
   User,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -21,6 +23,12 @@ declare global {
         confirmationResult?: ConfirmationResult;
     }
 }
+
+const GoogleIcon = () => (
+    <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+        <path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 110.3 512 0 401.7 0 265.9c0-69.2 28.1-131.7 73.4-175.4C118.8 46.1 178.6 22 244 22c59.3 0 112.5 22.1 151.3 58.9l-49.1 49.1c-26.6-25.2-62.7-39.2-102.2-39.2-74.9 0-136.1 61.2-136.1 136.1s61.2 136.1 136.1 136.1c86.2 0 119.5-62.8 123.5-93.5H244v-64.8h244z"></path>
+    </svg>
+);
 
 const ADMIN_UID = 'nvZWlJOeBHdojcfXC9ODKMJwky12';
 
@@ -87,6 +95,9 @@ export default function LoginPage() {
         case 'auth/invalid-verification-code':
             description = 'The verification code you entered is invalid.';
             break;
+        case 'auth/popup-closed-by-user':
+            description = 'The sign-in window was closed. Please try again.';
+            break;
         default:
             description = `An unexpected error occurred. (Code: ${error.code || 'N/A'}). Check browser console for details.`;
             break;
@@ -126,7 +137,19 @@ export default function LoginPage() {
     } catch (error) {
         handleSignInError(error);
     }
-  }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (!auth || isSigningIn) return;
+    setIsSigningIn(true);
+    const provider = new GoogleAuthProvider();
+    try {
+      const userCredential = await signInWithPopup(auth, provider);
+      handleSignInSuccess(userCredential.user);
+    } catch (error) {
+      handleSignInError(error);
+    }
+  };
 
 
   return (
@@ -135,7 +158,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-lg border-2">
         <CardHeader className="text-center">
           <CardTitle className="font-headline text-3xl">Admin Access</CardTitle>
-          <CardDescription>Sign in with your administrator phone number.</CardDescription>
+          <CardDescription>Sign in with Google or your administrator phone number.</CardDescription>
         </CardHeader>
         <CardContent>
           {uiState === 'phone-entry' && (
@@ -182,6 +205,21 @@ export default function LoginPage() {
                 </Button>
             </form>
           )}
+          <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                      Or continue with
+                  </span>
+              </div>
+          </div>
+
+          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isSigningIn}>
+              {isSigningIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
+              Sign in with Google
+          </Button>
         </CardContent>
       </Card>
     </div>
