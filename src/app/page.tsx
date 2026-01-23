@@ -100,23 +100,25 @@ export default function Home() {
     <div className="flex flex-col">
       {/* Hero Section */}
       <section className="relative w-full h-[70vh] md:h-[80vh] bg-black">
-        {heroImage && (
-            <Image
-                src={heroImage.imageUrl}
-                alt="A friendly physiotherapist smiling."
-                fill
-                priority
-                quality={100}
-                className="object-contain"
-                data-ai-hint="doctor portrait"
-            />
-        )}
+        <div className="absolute inset-0 z-0">
+            {heroImage && (
+                <Image
+                    src={heroImage.imageUrl}
+                    alt="A friendly physiotherapist smiling."
+                    fill
+                    priority
+                    quality={100}
+                    className="object-cover"
+                    data-ai-hint="doctor portrait"
+                />
+            )}
+        </div>
         <div className="absolute inset-0 bg-black/50 z-10" />
         <div className="relative z-20 container h-full flex flex-col justify-center text-white">
           <h1 className="font-headline text-5xl md:text-7xl font-bold max-w-3xl !leading-tight">
             Move Freely, Live Fully.
           </h1>
-          <p className="mt-4 max-w-xl text-lg text-gray-200">
+          <p className="mt-4 max-w-xl text-lg text-muted-foreground">
             Expert physiotherapy to help you overcome injury, manage pain, and achieve your physical best.
           </p>
           <div className="mt-8">
