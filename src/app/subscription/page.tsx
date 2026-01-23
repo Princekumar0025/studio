@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useState, useMemo } from 'react';
+import Image from 'next/image';
 
 type Plan = {
   id: string;
@@ -27,6 +28,9 @@ type Plan = {
   features: string[];
   isFeatured: boolean;
   durationInDays: number;
+  imageUrl?: string;
+  videoUrl?: string;
+  content?: string;
 };
 
 type UserSubscription = {
@@ -165,11 +169,16 @@ export default function SubscriptionPage() {
                     <Card 
                         key={plan.id}
                         className={cn(
-                            "flex flex-col h-full shadow-lg border-2 transition-all",
+                            "flex flex-col h-full shadow-lg border-2 transition-all overflow-hidden",
                             plan.isFeatured && !hasActiveSub ? "border-primary scale-105 bg-card" : "border-border",
                             isCurrentPlan && "border-green-500"
                         )}
                     >
+                    {plan.imageUrl && (
+                        <div className="relative h-48 w-full">
+                            <Image src={plan.imageUrl} alt={plan.name} fill className="object-cover" />
+                        </div>
+                    )}
                     {(plan.isFeatured && !hasActiveSub) && (
                         <Badge className="absolute -top-3 right-4 flex items-center gap-1">
                             <Star className="h-3 w-3" /> Most Popular

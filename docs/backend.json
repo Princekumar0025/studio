@@ -56,6 +56,18 @@
         "durationInDays": {
           "type": "number",
           "description": "Duration of the plan in days."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL for a representative image for the plan."
+        },
+        "videoUrl": {
+          "type": "string",
+          "description": "URL for a promotional video for the plan."
+        },
+        "content": {
+          "type": "string",
+          "description": "Detailed content or description for the plan, can include markdown."
         }
       },
       "required": [

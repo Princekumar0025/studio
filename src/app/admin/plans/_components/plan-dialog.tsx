@@ -41,6 +41,9 @@ export type Plan = {
   features: string[];
   isFeatured: boolean;
   durationInDays: number;
+  imageUrl?: string;
+  videoUrl?: string;
+  content?: string;
 };
 
 const formSchema = z.object({
@@ -50,6 +53,9 @@ const formSchema = z.object({
   durationInDays: z.coerce.number().int().positive('Duration must be a positive whole number.'),
   features: z.string().min(1, 'Please add at least one feature.'),
   isFeatured: z.boolean().default(false),
+  imageUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  videoUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  content: z.string().optional(),
 });
 
 type PlanFormValues = z.infer<typeof formSchema>;
@@ -79,6 +85,9 @@ export function PlanDialog({
       durationInDays: 30,
       features: '',
       isFeatured: false,
+      imageUrl: '',
+      videoUrl: '',
+      content: '',
     },
   });
   
@@ -92,6 +101,9 @@ export function PlanDialog({
           durationInDays: plan.durationInDays,
           features: plan.features.join('\n'),
           isFeatured: plan.isFeatured || false,
+          imageUrl: plan.imageUrl || '',
+          videoUrl: plan.videoUrl || '',
+          content: plan.content || '',
         });
       } else {
         form.reset({
@@ -101,6 +113,9 @@ export function PlanDialog({
           durationInDays: 30,
           features: '',
           isFeatured: false,
+          imageUrl: '',
+          videoUrl: '',
+          content: '',
         });
       }
     }
@@ -217,6 +232,49 @@ export function PlanDialog({
                       placeholder="Personalized exercise plan..."
                       {...field}
                       rows={4}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Image URL</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://example.com/image.jpg" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="videoUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Video URL</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://youtube.com/watch?v=..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Plan Content</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Detailed content for the plan page..."
+                      {...field}
+                      rows={6}
                     />
                   </FormControl>
                   <FormMessage />
