@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -54,8 +54,8 @@ const formSchema = z.object({
   durationInDays: z.coerce.number().int().positive('Duration must be a positive whole number.'),
   features: z.string().min(1, 'Please add at least one feature.'),
   isFeatured: z.boolean().default(false),
-  imageUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
-  videoUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  imageUrl: z.string().optional(),
+  videoUrl: z.string().optional(),
   content: z.string().optional(),
 });
 
@@ -76,6 +76,8 @@ export function PlanDialog({
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<PlanFormValues>({
     resolver: zodResolver(formSchema),
@@ -121,6 +123,45 @@ export function PlanDialog({
       }
     }
   }, [open, isEditMode, plan, form]);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>, field: 'imageUrl' | 'videoUrl') => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (field === 'videoUrl') {
+        toast({
+            variant: 'destructive',
+            title: 'Feature Not Supported',
+            description: 'Direct video uploads are not supported due to size limitations. Please use a URL from a video hosting service like YouTube or Vimeo.',
+        });
+        if (event.target) event.target.value = '';
+        return;
+    }
+    
+    if (!file.type.startsWith('image/')) {
+        toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Please select an image file.' });
+        return;
+    }
+
+    if (file.size > 500 * 1024) { // 500KB limit
+        toast({ variant: 'destructive', title: 'Image Too Large', description: 'Please select an image smaller than 500KB.' });
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const dataUri = e.target?.result as string;
+        form.setValue(field, dataUri);
+        toast({ title: 'Image Ready', description: 'The image has been prepared and will be saved with the plan.' });
+    };
+    reader.onerror = () => {
+        toast({ variant: 'destructive', title: 'Error Reading File', description: 'Could not read the selected file.' });
+    };
+    reader.readAsDataURL(file);
+
+    if (event.target) event.target.value = '';
+  };
+
 
   async function onSubmit(values: PlanFormValues) {
     if (!firestore) return;
@@ -247,12 +288,19 @@ export function PlanDialog({
                   <FormLabel>Image</FormLabel>
                   <FormControl>
                     <div className="flex items-center gap-2">
-                        <Input placeholder="https://example.com/image.jpg" {...field} />
-                        <Button type="button" variant="outline" onClick={() => toast({ title: 'Feature coming soon!', description: 'Direct image uploads are not yet supported.' })}>Upload</Button>
+                        <Input placeholder="Enter URL or upload an image" {...field} />
+                        <Button type="button" variant="outline" onClick={() => imageInputRef.current?.click()}>Upload</Button>
+                        <input 
+                            type="file" 
+                            ref={imageInputRef} 
+                            className="hidden" 
+                            accept="image/*"
+                            onChange={(e) => handleFileSelect(e, 'imageUrl')}
+                        />
                     </div>
                   </FormControl>
                   <FormDescription>
-                    Enter an image URL or click "Upload" (feature coming soon).
+                    Provide a URL or upload a small image (under 500KB).
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -267,11 +315,18 @@ export function PlanDialog({
                   <FormControl>
                     <div className="flex items-center gap-2">
                         <Input placeholder="https://youtube.com/watch?v=..." {...field} />
-                        <Button type="button" variant="outline" onClick={() => toast({ title: 'Feature coming soon!', description: 'Direct video uploads are not yet supported.' })}>Upload</Button>
+                         <Button type="button" variant="outline" onClick={() => videoInputRef.current?.click()}>Upload</Button>
+                         <input 
+                            type="file" 
+                            ref={videoInputRef} 
+                            className="hidden" 
+                            accept="video/*"
+                            onChange={(e) => handleFileSelect(e, 'videoUrl')}
+                        />
                     </div>
                   </FormControl>
                   <FormDescription>
-                    Enter a video URL or click "Upload" (feature coming soon).
+                    Enter a video URL. Direct video uploads are not supported.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
