@@ -115,7 +115,6 @@ export default function AdminLayout({
         <SidebarContent>
           <SidebarGroup>
             <Link href="/admin/dashboard" className="flex items-center gap-3 p-2">
-              <Image src="https://i.ibb.co/yYvK2g5/physiotherapy-logo-removebg-preview.png" alt="Manual Physiotherapy Logo" width={32} height={32} />
               <span className="text-lg font-bold font-headline">
                 <span className="text-primary">Manual</span> <span className="text-sidebar-foreground">Physiotherapy</span>
               </span>
