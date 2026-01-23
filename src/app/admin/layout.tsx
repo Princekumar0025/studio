@@ -23,7 +23,6 @@ import {
   CreditCard,
   Settings,
   MessageSquare,
-  Plus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -31,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { useUser } from '@/firebase';
 import React, { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import Image from 'next/image';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: Home },
@@ -115,9 +115,7 @@ export default function AdminLayout({
         <SidebarContent>
           <SidebarGroup>
             <Link href="/admin/dashboard" className="flex items-center gap-3 p-2">
-              <div className="p-2 bg-primary rounded-lg">
-                <Plus className="h-5 w-5 text-primary-foreground" />
-              </div>
+              <Image src="https://i.ibb.co/2nL6bC4/physiotherapy-logo-removebg-preview.png" alt="Manual Physiotherapy Logo" width={32} height={32} />
               <span className="text-lg font-bold font-headline">
                 <span className="text-primary">Manual</span> <span className="text-sidebar-foreground">Physiotherapy</span>
               </span>

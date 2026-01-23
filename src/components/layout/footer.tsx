@@ -1,9 +1,10 @@
 'use client';
 import Link from "next/link";
-import { Twitter, Instagram, Facebook, Plus } from "lucide-react";
+import { Twitter, Instagram, Facebook } from "lucide-react";
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import Image from "next/image";
 
 type SocialLink = {
   id: string;
@@ -61,9 +62,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="flex flex-col gap-4">
              <Link href="/" className="flex items-center gap-3">
-                <div className="p-2 bg-primary rounded-lg">
-                    <Plus className="h-5 w-5 text-primary-foreground" />
-                </div>
+                <Image src="https://i.ibb.co/2nL6bC4/physiotherapy-logo-removebg-preview.png" alt="Manual Physiotherapy Logo" width={40} height={40} />
                 <span className="text-xl font-bold font-headline">
                     <span className="text-primary">Manual</span> <span className="text-foreground">Physiotherapy</span>
                 </span>

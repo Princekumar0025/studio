@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, ShoppingCart, Plus } from "lucide-react";
+import { Menu, ShoppingCart } from "lucide-react";
 import { useAuth, useUser } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -18,6 +18,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "./theme-toggle";
+import Image from "next/image";
 
 const ADMIN_UID = 'nvZWlJOeBHdojcfXC9ODKMJwky12';
 
@@ -116,9 +117,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-8 flex items-center gap-3">
-          <div className="p-2 bg-primary rounded-lg">
-              <Plus className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <Image src="https://i.ibb.co/2nL6bC4/physiotherapy-logo-removebg-preview.png" alt="Manual Physiotherapy Logo" width={40} height={40} />
           <span className="text-xl font-bold font-headline hidden sm:inline-block">
             <span className="text-primary">Manual</span> <span className="text-foreground">Physiotherapy</span>
           </span>
@@ -146,9 +145,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="left">
               <Link href="/" className="mr-6 flex items-center gap-3 mb-8">
-                 <div className="p-2 bg-primary rounded-lg">
-                    <Plus className="h-5 w-5 text-primary-foreground" />
-                 </div>
+                 <Image src="https://i.ibb.co/2nL6bC4/physiotherapy-logo-removebg-preview.png" alt="Manual Physiotherapy Logo" width={40} height={40} />
                  <span className="text-xl font-bold font-headline">
                     <span className="text-primary">Manual</span> <span className="text-foreground">Physiotherapy</span>
                  </span>
