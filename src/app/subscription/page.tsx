@@ -5,19 +5,17 @@ import {
   useCollection,
   useFirestore,
   useMemoFirebase,
-  useUser,
-  FirestorePermissionError,
-  errorEmitter
+  useUser
 } from '@/firebase';
-import { collection, addDoc, Timestamp, query } from 'firebase/firestore';
+import { collection, Timestamp, query } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Star, Loader2 } from 'lucide-react';
+import { Check, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import Image from 'next/image';
 
 type Plan = {
@@ -71,7 +69,6 @@ export default function SubscriptionPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
-  const [isSubscribing, setIsSubscribing] = useState<string | null>(null);
 
   const plansCollection = useMemoFirebase(() => firestore ? collection(firestore, 'subscriptionPlans') : null, [firestore]);
   const { data: plans, isLoading: plansLoading } = useCollection<Plan>(plansCollection);
@@ -99,49 +96,19 @@ export default function SubscriptionPage() {
   const handleSubscribe = (plan: Plan) => {
     if (isUserLoading) return;
     if (!user) {
-      router.push('/login?redirect=/subscription');
+      router.push('/patient-login?redirect=/subscription');
       return;
     }
-    if (!firestore) return;
 
-    setIsSubscribing(plan.id);
-
-    const startDate = new Date();
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + plan.durationInDays);
-
-    const subscriptionData = {
-        userId: user.uid,
-        userEmail: user.email,
-        planId: plan.id,
-        planName: plan.name,
-        price: plan.price,
-        status: 'active',
-        startDate: Timestamp.fromDate(startDate),
-        endDate: Timestamp.fromDate(endDate),
-    };
-
-    const newSubscriptionRef = collection(firestore, 'users', user.uid, 'subscriptions');
-    
-    addDoc(newSubscriptionRef, subscriptionData).then(() => {
+    if (activeSubscription) {
         toast({
-            title: "Subscription Successful!",
-            description: `You are now subscribed to the "${plan.name}" plan. A confirmation email has been sent to ${user.email}.`,
+            title: "You're already subscribed",
+            description: `You already have an active subscription. Manage it in your account page.`
         });
-    }).catch((error) => {
-        const permissionError = new FirestorePermissionError({
-            path: newSubscriptionRef.path,
-            operation: 'create',
-            requestResourceData: {
-                ...subscriptionData,
-                startDate: 'SERVER_TIMESTAMP', // Represent server value for error logging
-                endDate: 'CALCULATED_TIMESTAMP'
-            }
-        });
-        errorEmitter.emit('permission-error', permissionError);
-    }).finally(() => {
-        setIsSubscribing(null);
-    });
+        return;
+    }
+    
+    router.push(`/subscription/checkout/${plan.id}`);
   }
 
   const isLoading = plansLoading || isUserLoading || subscriptionsLoading;
@@ -213,9 +180,8 @@ export default function SubscriptionPage() {
                             className="w-full" 
                             variant={isCurrentPlan ? "outline" : (plan.isFeatured ? "default" : "outline")}
                             onClick={() => handleSubscribe(plan)}
-                            disabled={isSubscribing !== null || (hasActiveSub)}
+                            disabled={hasActiveSub}
                         >
-                        {isSubscribing === plan.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {isCurrentPlan ? "Your Active Plan" : (hasActiveSub ? "Plan Already Active" : "Get Started")}
                         </Button>
                     </CardFooter>
