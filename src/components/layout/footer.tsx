@@ -1,6 +1,7 @@
 'use client';
 import Link from "next/link";
-import { Stethoscope, Twitter, Instagram, Facebook } from "lucide-react";
+import Image from "next/image";
+import { Twitter, Instagram, Facebook } from "lucide-react";
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -61,10 +62,9 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="flex flex-col gap-4">
              <Link href="/" className="flex items-center gap-2">
-              <Stethoscope className="h-6 w-6 text-primary" />
-              <span className="font-headline text-xl font-bold">PhysioGuide</span>
+                <Image src="https://storage.googleapis.com/studioprompt/c071a257-22be-4e3f-85d8-44585f671c6f_0.png" alt="Manual Physiotherapy Logo" width={200} height={50} className="object-contain" />
             </Link>
-            <p className="text-sm text-muted-foreground">Your expert partner in pain recovery and physical wellness.</p>
+            <p className="text-sm text-muted-foreground">Expert manual physiotherapy for sports injury and rehabilitation.</p>
             <DynamicSocialLinks />
           </div>
           <div className="md:col-start-3 flex flex-col gap-2">
@@ -85,11 +85,9 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t pt-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} PhysioGuide. All rights reserved.
+          © {new Date().getFullYear()} Manual Physiotherapy. All rights reserved.
         </div>
       </div>
     </footer>
   );
 }
-
-    

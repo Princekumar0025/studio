@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, Stethoscope, ShoppingCart } from "lucide-react";
+import { Menu, ShoppingCart } from "lucide-react";
 import { useAuth, useUser } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -116,8 +117,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-8 flex items-center gap-2">
-          <Stethoscope className="h-6 w-6 text-primary" />
-          <span className="font-headline text-xl font-bold">PhysioGuide</span>
+          <Image src="https://storage.googleapis.com/studioprompt/c071a257-22be-4e3f-85d8-44585f671c6f_0.png" alt="Manual Physiotherapy Logo" width={180} height={45} className="object-contain" />
         </Link>
         <nav className="hidden items-center gap-6 md:flex">
           {navLinks.map((link) => (
@@ -142,8 +142,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="left">
               <Link href="/" className="mr-6 flex items-center gap-2 mb-8">
-                 <Stethoscope className="h-6 w-6 text-primary" />
-                 <span className="font-headline text-xl font-bold">PhysioGuide</span>
+                 <Image src="https://storage.googleapis.com/studioprompt/c071a257-22be-4e3f-85d8-44585f671c6f_0.png" alt="Manual Physiotherapy Logo" width={180} height={45} className="object-contain" />
               </Link>
               <nav className="grid gap-6 text-lg font-medium">
                 {navLinks.map((link) => (

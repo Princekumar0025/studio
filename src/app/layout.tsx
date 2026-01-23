@@ -7,8 +7,8 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  title: 'PhysioGuide',
-  description: 'Your guide to physiotherapy and pain recovery.',
+  title: 'Manual Physiotherapy',
+  description: 'Manual Physiotherapy - Sports Injury & Rehab Center',
 };
 
 export default function RootLayout({

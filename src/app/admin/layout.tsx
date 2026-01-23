@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import {
   Sidebar,
   SidebarContent,
@@ -15,7 +16,6 @@ import {
   Users,
   Store,
   Calendar,
-  Stethoscope,
   PanelLeft,
   Activity,
   Mail,
@@ -115,8 +115,7 @@ export default function AdminLayout({
         <SidebarContent>
           <SidebarGroup>
             <Link href="/admin/dashboard" className="flex items-center gap-2 p-2">
-              <Stethoscope className="h-6 w-6 text-primary" />
-              <span className="font-headline text-xl font-bold">PhysioGuide</span>
+              <Image src="https://storage.googleapis.com/studioprompt/c071a257-22be-4e3f-85d8-44585f671c6f_0.png" alt="Manual Physiotherapy Logo" width={180} height={45} className="object-contain" />
             </Link>
           </SidebarGroup>
           <SidebarGroup>
@@ -148,5 +147,3 @@ export default function AdminLayout({
     </SidebarProvider>
   );
 }
-
-    
