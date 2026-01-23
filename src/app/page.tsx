@@ -100,7 +100,7 @@ export default function Home() {
     <div className="flex flex-col">
       {/* Hero Section */}
       <section
-        className="relative w-full h-[70vh] md:h-[80vh] bg-contain bg-center bg-no-repeat"
+        className="relative w-full h-[70vh] md:h-[80vh] bg-black bg-contain bg-center bg-no-repeat"
         style={{
           backgroundImage: heroImage ? `url(${heroImage.imageUrl})` : 'none',
         }}
