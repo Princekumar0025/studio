@@ -2,9 +2,9 @@
   "placeholderImages": [
     {
       "id": "hero-image",
-      "description": "A friendly doctor smiling.",
-      "imageUrl": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=2070&auto=format&fit=crop",
-      "imageHint": "friendly doctor"
+      "description": "A friendly doctor smiling in front of anatomical charts.",
+      "imageUrl": "https://storage.googleapis.com/res-blockflow-com/images/e77242c1-8411-4796-980b-48602b9fdd3f/image.jpeg",
+      "imageHint": "doctor charts"
     },
     {
       "id": "caleb-burgess",
