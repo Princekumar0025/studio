@@ -64,7 +64,9 @@ export function Footer() {
                 <div className="p-2 bg-primary rounded-lg">
                     <Plus className="h-5 w-5 text-primary-foreground" />
                 </div>
-                <span className="text-xl font-bold font-headline">Manual Physiotherapy</span>
+                <span className="text-xl font-bold font-headline">
+                    <span className="text-primary">Manual</span> <span className="text-foreground">Physiotherapy</span>
+                </span>
             </Link>
             <p className="text-sm text-muted-foreground">Expert manual physiotherapy for sports injury and rehabilitation.</p>
             <DynamicSocialLinks />

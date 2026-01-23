@@ -119,7 +119,9 @@ export function Header() {
           <div className="p-2 bg-primary rounded-lg">
               <Plus className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold font-headline text-foreground hidden sm:inline-block">Manual Physiotherapy</span>
+          <span className="text-xl font-bold font-headline hidden sm:inline-block">
+            <span className="text-primary">Manual</span> <span className="text-foreground">Physiotherapy</span>
+          </span>
         </Link>
         <nav className="hidden items-center gap-6 md:flex">
           {navLinks.map((link) => (
@@ -147,7 +149,9 @@ export function Header() {
                  <div className="p-2 bg-primary rounded-lg">
                     <Plus className="h-5 w-5 text-primary-foreground" />
                  </div>
-                 <span className="text-xl font-bold font-headline text-foreground">Manual Physiotherapy</span>
+                 <span className="text-xl font-bold font-headline">
+                    <span className="text-primary">Manual</span> <span className="text-foreground">Physiotherapy</span>
+                 </span>
               </Link>
               <nav className="grid gap-6 text-lg font-medium">
                 {navLinks.map((link) => (
