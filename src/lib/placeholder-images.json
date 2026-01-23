@@ -2,9 +2,9 @@
   "placeholderImages": [
     {
       "id": "hero-image",
-      "description": "A woman doing a yoga pose outdoors with a sunset in the background.",
-      "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx5b2dhJTIwcG9zZXxlbnwwfHx8fDE3Njg2MzI0OTZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "yoga pose"
+      "description": "A doctor smiling in front of anatomical charts.",
+      "imageUrl": "https://storage.googleapis.com/res-blockflow-com/images/19a9307d-304b-4c5b-80a5-9276906b3e34/image.jpeg",
+      "imageHint": "doctor anatomy"
     },
     {
       "id": "caleb-burgess",
