@@ -1,5 +1,4 @@
 'use client';
-import Image from 'next/image';
 import {
   Sidebar,
   SidebarContent,
@@ -24,6 +23,7 @@ import {
   CreditCard,
   Settings,
   MessageSquare,
+  Plus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -114,8 +114,11 @@ export default function AdminLayout({
       <Sidebar>
         <SidebarContent>
           <SidebarGroup>
-            <Link href="/admin/dashboard" className="flex items-center gap-2 p-2">
-              <Image src="https://i.ibb.co/34wL1YQ/c071a257-22be-4e3f-85d8-44585f671c6f-0.png" alt="Manual Physiotherapy Logo" width={180} height={45} className="object-contain" />
+            <Link href="/admin/dashboard" className="flex items-center gap-3 p-2">
+              <div className="p-2 bg-primary rounded-lg">
+                <Plus className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <span className="text-lg font-bold font-headline text-sidebar-foreground">Manual Physiotherapy</span>
             </Link>
           </SidebarGroup>
           <SidebarGroup>
