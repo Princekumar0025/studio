@@ -108,7 +108,7 @@ export default function Home() {
                     fill
                     priority
                     quality={100}
-                    className="object-cover"
+                    className="object-cover object-top"
                     data-ai-hint="doctor portrait"
                 />
             )}
