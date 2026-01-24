@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { updateEmail, updatePassword, GoogleAuthProvider, linkWithPopup, unlink, RecaptchaVerifier, updatePhoneNumber, type ConfirmationResult } from 'firebase/auth';
 import { Loader2, KeyRound, Twitter, Facebook, Instagram, Trash2, PlusCircle, Save, Phone } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -573,6 +573,9 @@ export default function SettingsPage() {
                     disabled={isLoading.phone}
                     required
                   />
+                  <p className="text-sm text-muted-foreground">
+                    Use E.164 format (e.g., +12223334444). An SMS verification code will be sent. If you don't receive it, check if Phone Number sign-in is enabled in your Firebase project.
+                  </p>
                 </div>
                 <Button type="submit" disabled={isLoading.phone || !newPhoneNumber}>
                   {isLoading.phone && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

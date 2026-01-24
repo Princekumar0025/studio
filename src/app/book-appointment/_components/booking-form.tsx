@@ -128,8 +128,8 @@ export function BookingForm() {
           description: `Your request for ${format(values.date, "PPP")} at ${values.time} has been sent to ${therapistName}. You will receive a confirmation email shortly.`,
         });
         toast({
-          title: "Admin Notified via WhatsApp",
-          description: "A notification for the new appointment request has been sent to the admin's mobile number.",
+          title: "Admin Notification Simulated",
+          description: "An alert for this request would be sent to the admin via WhatsApp in a full implementation.",
         });
         form.reset();
       })
