@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/firebase';
+import { Label } from '@/components/ui/label';
 
 const emailSchema = z.object({
   email: z.string().email('Invalid email address.'),
