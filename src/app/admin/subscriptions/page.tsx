@@ -50,7 +50,7 @@ export default function SubscriptionsAdminPage() {
       .then(() => {
         toast({ 
           title: 'Status Updated & Notification Sent', 
-          description: `Subscription for ${subscription.userEmail} is now ${newStatus}. A confirmation email was sent to them from ${adminUser?.email || 'the admin email'}.`
+          description: `Subscription for ${subscription.userEmail} is now ${newStatus}. A confirmation email and WhatsApp message have been sent.`
         });
       })
       .catch(error => {

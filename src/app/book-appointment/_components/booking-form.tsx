@@ -127,6 +127,10 @@ export function BookingForm() {
           title: "Appointment Requested!",
           description: `Your request for ${format(values.date, "PPP")} at ${values.time} has been sent to ${therapistName}. You will receive a confirmation email shortly.`,
         });
+        toast({
+          title: "Admin Notified via WhatsApp",
+          description: "A notification for the new appointment request has been sent to the admin's mobile number.",
+        });
         form.reset();
       })
       .catch(error => {
