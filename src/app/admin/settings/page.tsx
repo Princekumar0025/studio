@@ -11,8 +11,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { updateEmail, updatePassword, GoogleAuthProvider, linkWithPopup, unlink, RecaptchaVerifier, updatePhoneNumber, type ConfirmationResult } from 'firebase/auth';
-import { Loader2, KeyRound, Twitter, Facebook, Instagram, Trash2, PlusCircle, Save, Phone } from 'lucide-react';
+import { updateEmail, updatePassword, GoogleAuthProvider, linkWithPopup, unlink } from 'firebase/auth';
+import { Loader2, KeyRound, Twitter, Facebook, Instagram, Trash2, PlusCircle, Save } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/firebase';
-import { Label } from '@/components/ui/label';
 
 const emailSchema = z.object({
   email: z.string().email('Invalid email address.'),
@@ -271,23 +270,13 @@ function ContactInfoManager() {
   )
 }
 
-declare global {
-    interface Window {
-        recaptchaVerifier?: RecaptchaVerifier;
-        confirmationResult?: ConfirmationResult;
-    }
-}
-
 // Main Page Component
 export default function SettingsPage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const { toast } = useToast();
 
-  const [isLoading, setIsLoading] = useState({ email: false, password: false, google: false, phone: false });
-  const [phoneUiState, setPhoneUiState] = useState<'phone-entry' | 'code-entry'>('phone-entry');
-  const [newPhoneNumber, setNewPhoneNumber] = useState('');
-  const [phoneVerificationCode, setPhoneVerificationCode] = useState('');
+  const [isLoading, setIsLoading] = useState({ email: false, password: false, google: false });
 
   const emailForm = useForm({
     resolver: zodResolver(emailSchema),
@@ -298,21 +287,6 @@ export default function SettingsPage() {
     resolver: zodResolver(passwordSchema),
     defaultValues: { newPassword: '', confirmPassword: '' },
   });
-
-  useEffect(() => {
-    if (!auth) return;
-    
-    if (!window.recaptchaVerifier) {
-        const recaptchaContainer = document.getElementById('recaptcha-container');
-        if (recaptchaContainer) {
-            recaptchaContainer.innerHTML = '';
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainer, {
-                'size': 'invisible',
-                'callback': (response: any) => {},
-            });
-        }
-    }
-  }, [auth]);
 
   const handleFirebaseError = (error: any) => {
     let title = 'An error occurred';
@@ -406,41 +380,6 @@ export default function SettingsPage() {
           setIsLoading(prev => ({...prev, google: false}));
       }
   };
-
-  const handleUpdatePhoneNumber = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !newPhoneNumber || !window.recaptchaVerifier) return;
-    setIsLoading(prev => ({ ...prev, phone: true }));
-
-    try {
-      const confirmationResult = await updatePhoneNumber(user, newPhoneNumber, window.recaptchaVerifier);
-      window.confirmationResult = confirmationResult;
-      setPhoneUiState('code-entry');
-      toast({ title: 'Verification Code Sent', description: `A code has been sent via SMS to ${newPhoneNumber}.` });
-    } catch (error: any) {
-      handleFirebaseError(error);
-    } finally {
-      setIsLoading(prev => ({ ...prev, phone: false }));
-    }
-  };
-
-  const handleConfirmPhoneUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!window.confirmationResult || !phoneVerificationCode) return;
-    setIsLoading(prev => ({ ...prev, phone: true }));
-
-    try {
-      await window.confirmationResult.confirm(phoneVerificationCode);
-      toast({ title: 'Phone Number Updated', description: 'Your phone number has been successfully updated.' });
-      setPhoneUiState('phone-entry');
-      setNewPhoneNumber('');
-      setPhoneVerificationCode('');
-    } catch (error: any) {
-      handleFirebaseError(error);
-    } finally {
-      setIsLoading(prev => ({ ...prev, phone: false }));
-    }
-  };
   
   if (isUserLoading) {
       return (
@@ -469,7 +408,6 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <div id="recaptcha-container"></div>
       <h1 className="text-2xl font-bold mb-6">Admin Settings</h1>
       
       <div className="grid gap-6 max-w-2xl mx-auto">
@@ -548,65 +486,6 @@ export default function SettingsPage() {
             </Card>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Phone Number</CardTitle>
-            <CardDescription>Update the phone number used for sign-in and notifications.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {phoneUiState === 'phone-entry' ? (
-              <form onSubmit={handleUpdatePhoneNumber} className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Current Number: {user.phoneNumber || 'Not provided'}
-                </p>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">New Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+1 555-555-5555"
-                    value={newPhoneNumber}
-                    onChange={(e) => setNewPhoneNumber(e.target.value)}
-                    disabled={isLoading.phone}
-                    required
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Use E.164 format (e.g., +12223334444). An SMS verification code will be sent. If you don't receive it, check if Phone Number sign-in is enabled in your Firebase project.
-                  </p>
-                </div>
-                <Button type="submit" disabled={isLoading.phone || !newPhoneNumber}>
-                  {isLoading.phone && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Send Code
-                </Button>
-              </form>
-            ) : (
-              <form onSubmit={handleConfirmPhoneUpdate} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="code">Verification Code</Label>
-                  <Input
-                    id="code"
-                    type="text"
-                    placeholder="123456"
-                    value={phoneVerificationCode}
-                    onChange={(e) => setPhoneVerificationCode(e.target.value)}
-                    disabled={isLoading.phone}
-                    required
-                  />
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button type="submit" disabled={isLoading.phone || !phoneVerificationCode} className="w-full sm:w-auto">
-                    {isLoading.phone && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Verify and Update
-                  </Button>
-                  <Button variant="link" onClick={() => setPhoneUiState('phone-entry')} disabled={isLoading.phone}>
-                    Use a different number
-                  </Button>
-                </div>
-              </form>
-            )}
-          </CardContent>
-        </Card>
-        
         <ContactInfoManager />
 
         <SocialLinksManager />
