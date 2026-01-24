@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
 import { collection, doc, setDoc, addDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -271,6 +271,13 @@ function ContactInfoManager() {
   )
 }
 
+declare global {
+    interface Window {
+        recaptchaVerifier?: RecaptchaVerifier;
+        confirmationResult?: ConfirmationResult;
+    }
+}
+
 // Main Page Component
 export default function SettingsPage() {
   const { user, isUserLoading } = useUser();
@@ -281,9 +288,6 @@ export default function SettingsPage() {
   const [phoneUiState, setPhoneUiState] = useState<'phone-entry' | 'code-entry'>('phone-entry');
   const [newPhoneNumber, setNewPhoneNumber] = useState('');
   const [phoneVerificationCode, setPhoneVerificationCode] = useState('');
-
-  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-  const confirmationResultRef = useRef<ConfirmationResult | null>(null);
 
   const emailForm = useForm({
     resolver: zodResolver(emailSchema),
@@ -298,17 +302,14 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!auth) return;
     
-    // Initialize reCAPTCHA verifier only once.
-    if (!recaptchaVerifierRef.current) {
+    if (!window.recaptchaVerifier) {
         const recaptchaContainer = document.getElementById('recaptcha-container');
         if (recaptchaContainer) {
-            // Clear container in case of hot-reloads
             recaptchaContainer.innerHTML = '';
-            const verifier = new RecaptchaVerifier(auth, recaptchaContainer, {
+            window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainer, {
                 'size': 'invisible',
                 'callback': (response: any) => {},
             });
-            recaptchaVerifierRef.current = verifier;
         }
     }
   }, [auth]);
@@ -408,20 +409,16 @@ export default function SettingsPage() {
 
   const handleUpdatePhoneNumber = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newPhoneNumber || !recaptchaVerifierRef.current) return;
+    if (!user || !newPhoneNumber || !window.recaptchaVerifier) return;
     setIsLoading(prev => ({ ...prev, phone: true }));
 
     try {
-      const confirmationResult = await updatePhoneNumber(user, newPhoneNumber, recaptchaVerifierRef.current);
-      confirmationResultRef.current = confirmationResult;
+      const confirmationResult = await updatePhoneNumber(user, newPhoneNumber, window.recaptchaVerifier);
+      window.confirmationResult = confirmationResult;
       setPhoneUiState('code-entry');
       toast({ title: 'Verification Code Sent', description: `A code has been sent via SMS to ${newPhoneNumber}.` });
     } catch (error: any) {
       handleFirebaseError(error);
-      // It's possible the verifier expired or failed. Let's try to reset it on error.
-      if (recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current.render().catch(console.error);
-      }
     } finally {
       setIsLoading(prev => ({ ...prev, phone: false }));
     }
@@ -429,11 +426,11 @@ export default function SettingsPage() {
 
   const handleConfirmPhoneUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!confirmationResultRef.current || !phoneVerificationCode) return;
+    if (!window.confirmationResult || !phoneVerificationCode) return;
     setIsLoading(prev => ({ ...prev, phone: true }));
 
     try {
-      await confirmationResultRef.current.confirm(phoneVerificationCode);
+      await window.confirmationResult.confirm(phoneVerificationCode);
       toast({ title: 'Phone Number Updated', description: 'Your phone number has been successfully updated.' });
       setPhoneUiState('phone-entry');
       setNewPhoneNumber('');
