@@ -31,7 +31,7 @@ import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const stepSchema = z.object({
@@ -50,6 +50,7 @@ const formSchema = z.object({
 
 export function AddGuideDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const firestore = useFirestore();
   const { toast } = useToast();
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -110,6 +111,7 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) return;
+    setIsSubmitting(true);
 
     const guidesCollection = collection(firestore, 'treatmentGuides');
     
@@ -130,6 +132,9 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
         });
         errorEmitter.emit('permission-error', permissionError);
         console.error('Error adding document: ', error);
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
   }
 
@@ -289,7 +294,13 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
             </Button>
             
             <DialogFooter>
-              <Button type="submit">Add Guide</Button>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
+                  Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Add Guide
+              </Button>
             </DialogFooter>
           </form>
         </Form>
