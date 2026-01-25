@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -43,6 +44,7 @@ const formSchema = z.object({
   slug: z.string().min(2, 'Slug must be at least 2 characters.').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens.'),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   imageId: z.string().min(1, 'Image ID is required.'),
+  videoUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   steps: z.array(stepSchema).min(1, 'At least one step is required.'),
 });
 
@@ -58,6 +60,7 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
       slug: '',
       description: '',
       imageId: '',
+      videoUrl: '',
       steps: [{ title: '', instructions: '' }],
     },
   });
@@ -171,6 +174,20 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
                 </FormItem>
               )}
             />
+             <FormField
+              control={form.control}
+              name="videoUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Video URL (Optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://www.youtube.com/watch?v=..." {...field} />
+                  </FormControl>
+                  <FormDescription>Link to a YouTube or Vimeo video for this guide.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <Separator />
 
@@ -237,3 +254,5 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
     </Dialog>
   );
 }
+
+    

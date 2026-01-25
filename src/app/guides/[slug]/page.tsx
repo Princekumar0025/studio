@@ -26,6 +26,7 @@ type TreatmentGuide = {
   imageId: string;
   slug: string;
   steps: GuideStep[];
+  videoUrl?: string;
 };
 
 type GuidePageProps = {
@@ -33,6 +34,34 @@ type GuidePageProps = {
     slug: string;
   };
 };
+
+function YouTubeEmbed({ url }: { url: string }) {
+    // Regex to extract video ID from various YouTube URL formats
+    const videoIdMatch = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(?:embed\/)?(?:v\/)?(?:shorts\/)?(?:\S+)/);
+    const videoId = videoIdMatch ? videoIdMatch[0].split(/v=|\/|youtu\.be\//).pop() : null;
+
+
+    if (!videoId) {
+        return (
+            <div className="text-center py-4 text-sm text-destructive bg-destructive/10 rounded-md">
+                Invalid or unsupported video URL provided.
+            </div>
+        );
+    }
+
+    return (
+        <div className="aspect-video w-full">
+        <iframe
+            className="w-full h-full rounded-lg"
+            src={`https://www.youtube.com/embed/${videoId.split('?')[0]}`}
+            title="YouTube video player"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+        ></iframe>
+        </div>
+    );
+}
 
 function GuideContent({ slug }: { slug: string }) {
     const firestore = useFirestore();
@@ -84,6 +113,13 @@ function GuideContent({ slug }: { slug: string }) {
                         <CardDescription className="pt-2 text-lg">{guide.description}</CardDescription>
                     </CardHeader>
                     <CardContent className="px-6 md:p-8 pt-0">
+                        {guide.videoUrl && (
+                            <div className="mb-8">
+                                <h3 className="font-headline text-2xl font-bold mb-4">Watch The Guide</h3>
+                                <YouTubeEmbed url={guide.videoUrl} />
+                            </div>
+                        )}
+                        <h3 className="font-headline text-2xl font-bold mb-4">Your Exercise Plan</h3>
                         <Accordion type="single" collapsible className="w-full">
                         {guide.steps.map((step, index) => (
                             <AccordionItem key={index} value={`item-${index}`}>
@@ -106,3 +142,5 @@ function GuideContent({ slug }: { slug: string }) {
 export default function GuidePage({ params }: GuidePageProps) {
     return <GuideContent slug={params.slug} />;
 }
+
+    
