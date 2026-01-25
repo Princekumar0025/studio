@@ -155,66 +155,68 @@ export function GuideDialog({ guide, open, onOpenChange }: GuideDialogProps) {
   };
 
 
-  async function onSubmit(values: GuideFormValues) {
-    setIsSubmitting(true);
-    try {
-      if (!firestore) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Firestore is not initialized. Please try again later.',
-        });
-        return;
-      }
-
-      const validSteps = values.steps.filter(
-        step => step.title.trim() !== '' && step.instructions.trim() !== ''
-      );
-
-      if (validSteps.length === 0) {
-        toast({
-          variant: "destructive",
-          title: "At least one complete step is required.",
-          description: "Please fill in the title and instructions for at least one step.",
-        });
-        return;
-      }
-      
-      const guideData = {
-          ...values,
-          steps: validSteps,
-      };
-
-      const operation = isEditMode ? 'update' : 'create';
-
-      if (isEditMode && guide) {
-          await setDoc(doc(firestore, 'treatmentGuides', guide.id), guideData);
-      } else {
-          await addDoc(collection(firestore, 'treatmentGuides'), guideData);
-      }
-
-      toast({ 
-          title: `Guide ${isEditMode ? 'Updated' : 'Added'}`,
-          description: `"${values.title}" has been successfully ${isEditMode ? 'updated' : 'added'}.`
+  function onSubmit(values: GuideFormValues) {
+    if (!firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Firestore is not initialized.',
       });
-      onOpenChange(false);
-    } catch (error) {
-        console.error(`Failed to ${isEditMode ? 'update' : 'create'} guide:`, error);
+      return;
+    }
+    
+    setIsSubmitting(true);
+
+    const validSteps = values.steps.filter(
+      step => step.title.trim() !== '' && step.instructions.trim() !== ''
+    );
+
+    if (validSteps.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'At least one complete step is required.',
+        description: 'Please fill in the title and instructions for at least one step.',
+      });
+      setIsSubmitting(false); // Reset button state
+      return;
+    }
+
+    const guideData = {
+      ...values,
+      steps: validSteps,
+    };
+
+    const operation = isEditMode ? 'update' : 'create';
+    const promise = isEditMode && guide
+      ? setDoc(doc(firestore, 'treatmentGuides', guide.id), guideData)
+      : addDoc(collection(firestore, 'treatmentGuides'), guideData);
+
+    promise
+      .then(() => {
+        toast({
+          title: `Guide ${isEditMode ? 'Updated' : 'Added'}`,
+          description: `"${values.title}" has been successfully ${isEditMode ? 'updated' : 'added'}.`,
+        });
+        onOpenChange(false);
+      })
+      .catch((error) => {
+        console.error(`Failed to ${operation} guide:`, error);
         const path = isEditMode && guide ? `treatmentGuides/${guide.id}` : 'treatmentGuides';
         const permissionError = new FirestorePermissionError({
-            path,
-            operation: isEditMode ? 'update' : 'create',
-            requestResourceData: values,
+          path,
+          operation,
+          requestResourceData: guideData,
         });
         errorEmitter.emit('permission-error', permissionError);
         toast({
-            variant: "destructive",
-            title: `Failed to ${isEditMode ? 'update' : 'create'} guide`,
-            description: "An error occurred. Please check your permissions and try again.",
+          variant: 'destructive',
+          title: `Failed to ${operation} guide`,
+          description: 'An error occurred. Please check your permissions and try again.',
         });
-    } finally {
+      })
+      .finally(() => {
         setIsSubmitting(false);
-    }
+      });
   }
 
   return (
