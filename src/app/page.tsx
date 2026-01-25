@@ -98,13 +98,20 @@ export default function Home() {
     <div className="flex flex-col">
       {/* Hero Section */}
       <section
-        className="relative w-full h-[70vh] md:h-[80vh] bg-cover bg-center"
-        style={{
-          backgroundImage: heroImage ? `url(${heroImage.imageUrl})` : 'none',
-        }}
+        className="relative w-full h-[70vh] md:h-[80vh]"
       >
+        {heroImage && (
+            <Image
+                src={heroImage.imageUrl}
+                alt={heroImage.description}
+                fill
+                className="object-cover object-center"
+                data-ai-hint={heroImage.imageHint}
+                priority
+            />
+        )}
         <div className="absolute inset-0 bg-black/50 z-10" />
-        <div className="relative z-20 container h-full flex flex-col justify-end pb-20 text-white">
+        <div className="relative z-20 container h-full flex flex-col justify-center items-start text-white">
           <h1 className="font-headline text-5xl md:text-7xl font-bold max-w-3xl !leading-tight">
             Move Freely, Live Fully.
           </h1>
