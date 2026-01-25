@@ -163,7 +163,7 @@ export function PlanDialog({
   };
 
 
-  async function onSubmit(values: PlanFormValues) {
+  function onSubmit(values: PlanFormValues) {
     if (!firestore) return;
     setIsSubmitting(true);
 
@@ -172,30 +172,34 @@ export function PlanDialog({
       features: values.features.split('\n').map((s) => s.trim()).filter(Boolean),
     };
 
-    try {
-      if (isEditMode && plan) {
-        const planRef = doc(firestore, 'subscriptionPlans', plan.id);
-        await setDoc(planRef, planData, { merge: true });
-        toast({ title: 'Plan Updated', description: `${values.name} has been updated.` });
-      } else {
-        const plansCollection = collection(firestore, 'subscriptionPlans');
-        await addDoc(plansCollection, planData);
-        toast({ title: 'Plan Added', description: `${values.name} has been added.` });
-      }
-      onOpenChange(false);
-    } catch (error) {
-      const path = isEditMode && plan
-        ? `subscriptionPlans/${plan.id}`
-        : 'subscriptionPlans';
-      const permissionError = new FirestorePermissionError({
-        path,
-        operation: isEditMode ? 'update' : 'create',
-        requestResourceData: planData,
-      });
-      errorEmitter.emit('permission-error', permissionError);
-    } finally {
-      setIsSubmitting(false);
-    }
+    const operation = isEditMode ? 'update' : 'create';
+    const promise = isEditMode && plan
+        ? setDoc(doc(firestore, 'subscriptionPlans', plan.id), planData, { merge: true })
+        : addDoc(collection(firestore, 'subscriptionPlans'), planData);
+
+    promise.then(() => {
+        toast({ 
+            title: `Plan ${isEditMode ? 'Updated' : 'Added'}`,
+            description: `${values.name} has been successfully ${isEditMode ? 'updated' : 'added'}.`
+        });
+        onOpenChange(false);
+    }).catch((error) => {
+        console.error(`Failed to ${operation} plan:`, error);
+        const path = isEditMode && plan ? `subscriptionPlans/${plan.id}` : 'subscriptionPlans';
+        const permissionError = new FirestorePermissionError({
+            path,
+            operation,
+            requestResourceData: planData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        toast({
+            variant: "destructive",
+            title: `Failed to ${operation} plan`,
+            description: "An error occurred. Please check your permissions and try again.",
+        });
+    }).finally(() => {
+        setIsSubmitting(false);
+    });
   }
 
   return (

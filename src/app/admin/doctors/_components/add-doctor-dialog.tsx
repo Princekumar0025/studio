@@ -76,16 +76,18 @@ export function DoctorDialog({ doctor, open, onOpenChange }: DoctorDialogProps) 
   });
   
   useEffect(() => {
-    if (open && doctor) {
-        form.reset({
-            name: doctor.name,
-            title: doctor.title,
-            bio: doctor.bio,
-            specializations: doctor.specializations.join(', '),
-            imageUrl: doctor.imageUrl
-        });
-    } else if (open && !doctor) {
-        form.reset();
+    if (open) {
+      if (doctor) {
+          form.reset({
+              name: doctor.name,
+              title: doctor.title,
+              bio: doctor.bio,
+              specializations: doctor.specializations.join(', '),
+              imageUrl: doctor.imageUrl
+          });
+      } else {
+          form.reset();
+      }
     }
   }, [open, doctor, form]);
   
@@ -118,7 +120,7 @@ export function DoctorDialog({ doctor, open, onOpenChange }: DoctorDialogProps) 
   };
 
 
-  async function onSubmit(values: DoctorFormValues) {
+  function onSubmit(values: DoctorFormValues) {
     if (!firestore) return;
     setIsSubmitting(true);
 
@@ -127,28 +129,34 @@ export function DoctorDialog({ doctor, open, onOpenChange }: DoctorDialogProps) 
       specializations: values.specializations.split(',').map((s) => s.trim()).filter(Boolean),
     };
     
-    try {
-        if (isEditMode && doctor) {
-            const docRef = doc(firestore, 'therapists', doctor.id);
-            await setDoc(docRef, doctorData);
-            toast({ title: 'Doctor Updated', description: `${values.name} has been updated.`});
-        } else {
-            const collectionRef = collection(firestore, 'therapists');
-            await addDoc(collectionRef, doctorData);
-            toast({ title: 'Doctor Added', description: `${values.name} has been added.`});
-        }
+    const operation = isEditMode ? 'update' : 'create';
+    const promise = isEditMode && doctor
+        ? setDoc(doc(firestore, 'therapists', doctor.id), doctorData)
+        : addDoc(collection(firestore, 'therapists'), doctorData);
+
+    promise.then(() => {
+        toast({ 
+            title: `Doctor ${isEditMode ? 'Updated' : 'Added'}`,
+            description: `${values.name} has been successfully ${isEditMode ? 'updated' : 'added'}.`
+        });
         onOpenChange(false);
-    } catch (error) {
+    }).catch((error) => {
+        console.error(`Failed to ${operation} doctor:`, error);
         const path = isEditMode && doctor ? `therapists/${doctor.id}` : 'therapists';
         const permissionError = new FirestorePermissionError({
             path,
-            operation: isEditMode ? 'update' : 'create',
+            operation,
             requestResourceData: doctorData
         });
         errorEmitter.emit('permission-error', permissionError);
-    } finally {
+        toast({
+            variant: "destructive",
+            title: `Failed to ${operation} doctor`,
+            description: "An error occurred. Please check your permissions and try again.",
+        });
+    }).finally(() => {
         setIsSubmitting(false);
-    }
+    });
   }
 
   return (

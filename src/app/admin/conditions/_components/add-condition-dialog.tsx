@@ -75,18 +75,21 @@ export function ConditionDialog({ condition, open, onOpenChange }: ConditionDial
   });
 
   useEffect(() => {
-    if (open && condition) {
-      form.reset({
-        name: condition.name,
-        slug: condition.slug,
-        description: condition.description,
-        treatmentOptions: condition.treatmentOptions,
-        relatedGuideSlugs: condition.relatedGuideSlugs?.join(', ') || '',
-      });
-    } else if (open && !condition) {
+    if (open) {
+      if (condition) {
+        form.reset({
+          name: condition.name,
+          slug: condition.slug,
+          description: condition.description,
+          treatmentOptions: condition.treatmentOptions,
+          relatedGuideSlugs: condition.relatedGuideSlugs?.join(', ') || '',
+        });
+      } else {
         form.reset();
+      }
     }
   }, [open, condition, form]);
+
 
   const slugify = (str: string) =>
     str
@@ -96,7 +99,7 @@ export function ConditionDialog({ condition, open, onOpenChange }: ConditionDial
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '');
 
-  async function onSubmit(values: ConditionFormValues) {
+  function onSubmit(values: ConditionFormValues) {
     if (!firestore) return;
     setIsSubmitting(true);
     
@@ -105,28 +108,34 @@ export function ConditionDialog({ condition, open, onOpenChange }: ConditionDial
         relatedGuideSlugs: values.relatedGuideSlugs?.split(',').map(s => s.trim()).filter(Boolean) || [],
     };
     
-    try {
-        if (isEditMode && condition) {
-            const docRef = doc(firestore, 'conditions', condition.id);
-            await setDoc(docRef, conditionData);
-            toast({ title: 'Condition Updated', description: `${values.name} has been updated.` });
-        } else {
-            const collectionRef = collection(firestore, 'conditions');
-            await addDoc(collectionRef, conditionData);
-            toast({ title: 'Condition Added', description: `${values.name} has been added.` });
-        }
+    const operation = isEditMode ? 'update' : 'create';
+    const promise = isEditMode && condition
+        ? setDoc(doc(firestore, 'conditions', condition.id), conditionData)
+        : addDoc(collection(firestore, 'conditions'), conditionData);
+    
+    promise.then(() => {
+        toast({ 
+            title: `Condition ${isEditMode ? 'Updated' : 'Added'}`,
+            description: `"${values.name}" has been successfully ${isEditMode ? 'updated' : 'added'}.`
+        });
         onOpenChange(false);
-    } catch (error) {
+    }).catch((error) => {
+        console.error(`Failed to ${operation} condition:`, error);
         const path = isEditMode && condition ? `conditions/${condition.id}` : 'conditions';
         const permissionError = new FirestorePermissionError({
             path,
-            operation: isEditMode ? 'update' : 'create',
+            operation,
             requestResourceData: conditionData,
         });
         errorEmitter.emit('permission-error', permissionError);
-    } finally {
+        toast({
+            variant: "destructive",
+            title: `Failed to ${operation} condition`,
+            description: "An error occurred. Please check your permissions and try again.",
+        });
+    }).finally(() => {
         setIsSubmitting(false);
-    }
+    });
   }
 
   return (

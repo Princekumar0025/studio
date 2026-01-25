@@ -73,15 +73,17 @@ export function ProductDialog({ product, open, onOpenChange }: ProductDialogProp
   });
 
   useEffect(() => {
-    if (open && product) {
-        form.reset(product);
-    } else if (open && !product) {
-        form.reset({
-            name: '',
-            description: '',
-            price: 0,
-            imageUrl: '',
-        });
+    if (open) {
+        if (product) {
+            form.reset(product);
+        } else {
+            form.reset({
+                name: '',
+                description: '',
+                price: 0,
+                imageUrl: '',
+            });
+        }
     }
   }, [open, product, form]);
 
@@ -113,32 +115,38 @@ export function ProductDialog({ product, open, onOpenChange }: ProductDialogProp
     if (event.target) event.target.value = '';
   };
 
-  async function onSubmit(values: ProductFormValues) {
+  function onSubmit(values: ProductFormValues) {
     if (!firestore) return;
     setIsSubmitting(true);
     
-    try {
-        if (isEditMode && product) {
-            const docRef = doc(firestore, 'products', product.id);
-            await setDoc(docRef, values);
-            toast({ title: 'Product Updated', description: `${values.name} has been updated.`});
-        } else {
-            const collectionRef = collection(firestore, 'products');
-            await addDoc(collectionRef, values);
-            toast({ title: 'Product Added', description: `${values.name} has been added.`});
-        }
+    const operation = isEditMode ? 'update' : 'create';
+    const promise = isEditMode && product
+        ? setDoc(doc(firestore, 'products', product.id), values)
+        : addDoc(collection(firestore, 'products'), values);
+    
+    promise.then(() => {
+        toast({ 
+            title: `Product ${isEditMode ? 'Updated' : 'Added'}`,
+            description: `${values.name} has been successfully ${isEditMode ? 'updated' : 'added'}.`
+        });
         onOpenChange(false);
-    } catch (error) {
+    }).catch((error) => {
+        console.error(`Failed to ${operation} product:`, error);
         const path = isEditMode && product ? `products/${product.id}` : 'products';
         const permissionError = new FirestorePermissionError({
             path: path,
-            operation: isEditMode ? 'update' : 'create',
+            operation,
             requestResourceData: values,
         });
         errorEmitter.emit('permission-error', permissionError);
-    } finally {
+        toast({
+            variant: "destructive",
+            title: `Failed to ${operation} product`,
+            description: "An error occurred. Please check your permissions and try again.",
+        });
+    }).finally(() => {
         setIsSubmitting(false);
-    }
+    });
   }
 
   return (

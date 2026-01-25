@@ -155,32 +155,38 @@ export function GuideDialog({ guide, open, onOpenChange }: GuideDialogProps) {
   };
 
 
-  async function onSubmit(values: GuideFormValues) {
+  function onSubmit(values: GuideFormValues) {
     if (!firestore) return;
     setIsSubmitting(true);
     
-    try {
-        if (isEditMode && guide) {
-            const docRef = doc(firestore, 'treatmentGuides', guide.id);
-            await setDoc(docRef, values);
-            toast({ title: 'Guide Updated', description: `${values.title} has been updated.` });
-        } else {
-            const collectionRef = collection(firestore, 'treatmentGuides');
-            await addDoc(collectionRef, values);
-            toast({ title: 'Guide Added', description: `${values.title} has been added.` });
-        }
+    const operation = isEditMode ? 'update' : 'create';
+    const promise = isEditMode && guide
+        ? setDoc(doc(firestore, 'treatmentGuides', guide.id), values)
+        : addDoc(collection(firestore, 'treatmentGuides'), values);
+    
+    promise.then(() => {
+        toast({ 
+            title: `Guide ${isEditMode ? 'Updated' : 'Added'}`,
+            description: `"${values.title}" has been successfully ${isEditMode ? 'updated' : 'added'}.`
+        });
         onOpenChange(false);
-    } catch (error) {
+    }).catch((error) => {
+        console.error(`Failed to ${operation} guide:`, error);
         const path = isEditMode && guide ? `treatmentGuides/${guide.id}` : 'treatmentGuides';
         const permissionError = new FirestorePermissionError({
             path,
-            operation: isEditMode ? 'update' : 'create',
+            operation,
             requestResourceData: values,
         });
         errorEmitter.emit('permission-error', permissionError);
-    } finally {
+        toast({
+            variant: "destructive",
+            title: `Failed to ${operation} guide`,
+            description: "An error occurred. Please check your permissions and try again.",
+        });
+    }).finally(() => {
         setIsSubmitting(false);
-    }
+    });
   }
 
   return (
