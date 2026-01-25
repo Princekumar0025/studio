@@ -34,7 +34,7 @@ import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-function ProductList() {
+export default function StoreAdminPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const productsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'products') : null, [firestore]);
@@ -42,7 +42,6 @@ function ProductList() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined);
-  const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const handleAddClick = () => {
@@ -57,7 +56,6 @@ function ProductList() {
 
   const handleDeleteClick = (product: Product) => {
     setProductToDelete(product);
-    setDeleteAlertOpen(true);
   };
 
   const handleDeleteConfirm = () => {
@@ -79,100 +77,87 @@ function ProductList() {
             errorEmitter.emit('permission-error', permissionError);
         })
         .finally(() => {
-            setDeleteAlertOpen(false);
             setProductToDelete(null);
         });
   };
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i}>
-            <Skeleton className="h-48 w-full" />
-            <CardHeader>
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </CardHeader>
-            <CardContent>
-                <Skeleton className="h-10 w-full" />
-            </CardContent>
-            <CardFooter>
-                <Skeleton className="h-10 w-full" />
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {products?.map((product) => {
-        return (
-          <Card key={product.id} className="flex flex-col">
-            {product.imageUrl && (
-                <div className="relative h-48 w-full">
-                    <Image src={product.imageUrl} alt={product.name} fill className="object-cover rounded-t-lg" />
-                </div>
-            )}
-            <CardHeader>
-              <CardTitle>{product.name}</CardTitle>
-              <CardDescription>${product.price.toFixed(2)}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <p className="text-sm text-muted-foreground">{product.description}</p>
-            </CardContent>
-            <CardFooter className="flex justify-end gap-2">
-               <Button variant="outline" size="sm" onClick={() => handleEditClick(product)}>
-                    <Edit className="mr-2 h-4 w-4" /> Edit
-               </Button>
-               <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="icon" onClick={() => handleDeleteClick(product)}>
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the product "{productToDelete?.name}".
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setDeleteAlertOpen(false)}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteConfirm}>
-                        Continue
-                    </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-                </AlertDialog>
-            </CardFooter>
-          </Card>
-        );
-      })}
-    </div>
-    <ProductDialog open={dialogOpen} onOpenChange={setDialogOpen} product={selectedProduct} />
-    </>
-  );
-}
-
-
-export default function StoreAdminPage() {
-  const [dialogOpen, setDialogOpen] = useState(false);
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage Store</h1>
-        <Button onClick={() => setDialogOpen(true)}>
+        <Button onClick={handleAddClick}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Product
         </Button>
       </div>
-      <ProductList />
-      <ProductDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <Skeleton className="h-48 w-full" />
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent>
+                  <Skeleton className="h-10 w-full" />
+              </CardContent>
+              <CardFooter>
+                  <Skeleton className="h-10 w-full" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {products?.map((product) => {
+            return (
+              <Card key={product.id} className="flex flex-col">
+                {product.imageUrl && (
+                    <div className="relative h-48 w-full">
+                        <Image src={product.imageUrl} alt={product.name} fill className="object-cover rounded-t-lg" />
+                    </div>
+                )}
+                <CardHeader>
+                  <CardTitle>{product.name}</CardTitle>
+                  <CardDescription>${product.price.toFixed(2)}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                  <p className="text-sm text-muted-foreground">{product.description}</p>
+                </CardContent>
+                <CardFooter className="flex justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => handleEditClick(product)}>
+                        <Edit className="mr-2 h-4 w-4" /> Edit
+                  </Button>
+                  <Button variant="destructive" size="icon" onClick={() => handleDeleteClick(product)}>
+                      <Trash2 className="h-4 w-4" />
+                  </Button>
+                </CardFooter>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      <ProductDialog open={dialogOpen} onOpenChange={setDialogOpen} product={selectedProduct} />
+      
+      <AlertDialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the product "{productToDelete?.name}".
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+                Continue
+            </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }

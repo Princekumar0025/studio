@@ -42,7 +42,7 @@ type Condition = {
   relatedGuideSlugs?: string[];
 };
 
-function ConditionsList() {
+export default function ConditionsAdminPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const conditionsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'conditions') : null, [firestore]);
@@ -50,7 +50,6 @@ function ConditionsList() {
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCondition, setSelectedCondition] = useState<Condition | undefined>(undefined);
-  const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [conditionToDelete, setConditionToDelete] = useState<Condition | null>(null);
 
   const handleAddClick = () => {
@@ -65,7 +64,6 @@ function ConditionsList() {
 
   const handleDeleteClick = (condition: Condition) => {
     setConditionToDelete(condition);
-    setDeleteAlertOpen(true);
   };
 
   const handleDeleteConfirm = () => {
@@ -87,99 +85,82 @@ function ConditionsList() {
             errorEmitter.emit('permission-error', permissionError);
         })
         .finally(() => {
-            setDeleteAlertOpen(false);
             setConditionToDelete(null);
         });
   };
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </CardHeader>
-            <CardFooter>
-                 <Skeleton className="h-10 w-full" />
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-  
-  if (conditions?.length === 0) {
-    return (
-        <div className="text-center text-muted-foreground py-8">
-            <p>No conditions have been added yet.</p>
-        </div>
-    )
-  }
-
-  return (
-    <>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {conditions?.map((condition) => (
-          <Card key={condition.id} className="flex flex-col">
-            <CardHeader className="flex-grow">
-              <CardTitle>{condition.name}</CardTitle>
-              <CardDescription>/conditions/{condition.slug}</CardDescription>
-            </CardHeader>
-            <CardFooter className="flex justify-between">
-                <Button variant="outline" size="sm" asChild>
-                    <Link href={`/conditions/${condition.slug}`} target="_blank">View</Link>
-                </Button>
-                <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEditClick(condition)}>
-                        <Edit className="mr-2 h-4 w-4" /> Edit
-                    </Button>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(condition)}>
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the condition "{conditionToDelete?.name}".
-                            </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => setDeleteAlertOpen(false)}>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeleteConfirm}>
-                                Continue
-                            </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </div>
-            </CardFooter>
-          </Card>
-      ))}
-    </div>
-    <ConditionDialog open={dialogOpen} onOpenChange={setDialogOpen} condition={selectedCondition} />
-    </>
-  );
-}
-
-export default function ConditionsAdminPage() {
-    const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage Conditions</h1>
-         <Button onClick={() => setDialogOpen(true)}>
+         <Button onClick={handleAddClick}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Condition
           </Button>
       </div>
-      <ConditionsList />
-      <ConditionDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardFooter>
+                   <Skeleton className="h-10 w-full" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      ) : conditions?.length === 0 ? (
+          <div className="text-center text-muted-foreground py-8">
+              <p>No conditions have been added yet.</p>
+          </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {conditions?.map((condition) => (
+            <Card key={condition.id} className="flex flex-col">
+              <CardHeader className="flex-grow">
+                <CardTitle>{condition.name}</CardTitle>
+                <CardDescription>/conditions/{condition.slug}</CardDescription>
+              </CardHeader>
+              <CardFooter className="flex justify-between">
+                  <Button variant="outline" size="sm" asChild>
+                      <Link href={`/conditions/${condition.slug}`} target="_blank">View</Link>
+                  </Button>
+                  <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEditClick(condition)}>
+                          <Edit className="mr-2 h-4 w-4" /> Edit
+                      </Button>
+                      <Button variant="destructive" size="icon" onClick={() => handleDeleteClick(condition)}>
+                          <Trash2 className="h-4 w-4" />
+                      </Button>
+                  </div>
+              </CardFooter>
+            </Card>
+        ))}
+      </div>
+      )}
+
+      <ConditionDialog open={dialogOpen} onOpenChange={setDialogOpen} condition={selectedCondition} />
+      
+      <AlertDialog open={!!conditionToDelete} onOpenChange={(open) => !open && setConditionToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the condition "{conditionToDelete?.name}".
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+                Continue
+            </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
