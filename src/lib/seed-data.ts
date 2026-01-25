@@ -50,6 +50,42 @@ const treatmentGuides = [
             { title: "Heel Raises", instructions: "Stand with your feet flat on the floor. Slowly raise your heels up as high as you can, then slowly lower them back down. Perform 10-15 repetitions." },
             { title: "Single-leg balance", instructions: "Stand on one foot near a wall or chair for support. Try to hold your balance for 30 seconds. Repeat on the other leg." }
         ]
+    },
+    {
+        id: 'hip-mobility-drills',
+        title: "Hip Mobility Drills",
+        slug: "hip-mobility-drills",
+        description: "Exercises to improve hip flexibility, reduce tightness, and increase range of motion.",
+        imageId: "hip-mobility-guide",
+        steps: [
+            { title: "Kneeling Hip Flexor Stretch", instructions: "Kneel on one knee with your other foot in front. Gently push your hips forward until you feel a stretch in the front of your hip. Hold for 30 seconds." },
+            { title: "Pigeon Pose", instructions: "Start on all fours, bring one knee forward towards your wrist. Extend the other leg back. Sink your hips down, feeling a stretch in the glute. Hold for 30 seconds." },
+            { title: "90/90 Stretch", instructions: "Sit on the floor with both legs bent at 90 degrees, one in front and one to the side. Lean forward over your front leg to deepen the stretch. Hold for 30 seconds." }
+        ]
+    },
+    {
+        id: 'knee-strengthening-basics',
+        title: "Knee Strengthening Basics",
+        slug: "knee-strengthening-basics",
+        description: "Fundamental exercises to build strength around the knee joint for better stability and pain reduction.",
+        imageId: "knee-pain-guide",
+        steps: [
+            { title: "Quad Sets", instructions: "Sit on the floor with your injured leg straight. Tighten the muscle on the top of your thigh (quadriceps) by pressing the back of your knee into the floor. Hold for 5 seconds." },
+            { title: "Straight Leg Raises", instructions: "Lie on your back with one leg straight and the other bent. Tighten the thigh muscle of the straight leg and lift it about 12 inches off the floor. Hold for 3-5 seconds, then slowly lower." },
+            { title: "Wall Sits", instructions: "Stand with your back against a wall, feet shoulder-width apart. Slowly slide your back down the wall until your knees are bent at a 90-degree angle. Hold for 20-60 seconds." }
+        ]
+    },
+    {
+        id: 'wrist-and-hand-stretches',
+        title: "Wrist and Hand Stretches",
+        slug: "wrist-and-hand-stretches",
+        description: "Stretches to relieve pain and tension from repetitive strain, such as from typing or manual work.",
+        imageId: "wrist-stretches-guide",
+        steps: [
+            { title: "Prayer Stretch", instructions: "Place your palms together in front of your chest. Slowly lower your hands towards your waistline, keeping your palms together, until you feel a moderate stretch in your forearms. Hold for 15-30 seconds." },
+            { title: "Wrist Extensor Stretch", instructions: "Extend your arm in front of you with your palm down. With your other hand, gently bend your wrist down until you feel a stretch in the top of your forearm. Hold for 15-30 seconds." },
+            { title: "Wrist Flexor Stretch", instructions: "Extend your arm in front of you with your palm up. With your other hand, gently bend your wrist down until you feel a stretch in the bottom of your forearm. Hold for 15-30 seconds." }
+        ]
     }
 ];
 
@@ -101,6 +137,46 @@ const conditions = [
         description: "An overuse and muscle strain injury. The condition occurs when tendons in your elbow are overloaded, usually by repetitive motions of the wrist and arm.",
         treatmentOptions: "Treatment includes rest, wrist and forearm strengthening exercises, and education on activity modification to prevent recurrence.",
         relatedGuideSlugs: [],
+    },
+    {
+        id: 'runners-knee',
+        name: "Runner's Knee (Patellofemoral Pain)",
+        slug: "runners-knee",
+        description: "A dull pain around the front of the knee (patella), where it connects with the lower end of the thighbone (femur). It's common in athletes and active individuals.",
+        treatmentOptions: "Focuses on strengthening the quadriceps and hip muscles to improve knee tracking, along with stretching and activity modification.",
+        relatedGuideSlugs: ["knee-strengthening-basics"],
+    },
+    {
+        id: 'hip-impingement',
+        name: "Hip Impingement (FAI)",
+        slug: "hip-impingement",
+        description: "A condition where extra bone grows along one or both of the bones that form the hip joint — giving the bones an irregular shape. Because they do not fit together perfectly, the hip bones rub against each other during movement.",
+        treatmentOptions: "Physiotherapy aims to improve hip mobility, strengthen surrounding muscles, and modify movements to reduce painful impingement.",
+        relatedGuideSlugs: ["hip-mobility-drills"],
+    },
+    {
+        id: 'carpal-tunnel-syndrome',
+        name: "Carpal Tunnel Syndrome",
+        slug: "carpal-tunnel-syndrome",
+        description: "A condition that causes numbness, tingling, or weakness in your hand. It happens because of pressure on your median nerve, which runs the length of your arm and goes through a passage in your wrist called the carpal tunnel.",
+        treatmentOptions: "Treatment can include wrist splinting, nerve gliding exercises, and ergonomic adjustments to reduce pressure on the nerve.",
+        relatedGuideSlugs: ["wrist-and-hand-stretches"],
+    },
+    {
+        id: 'sciatica',
+        name: "Sciatica",
+        slug: "sciatica",
+        description: "Pain that radiates along the path of the sciatic nerve, which branches from your lower back through your hips and buttocks and down each leg. Typically, sciatica affects only one side of your body.",
+        treatmentOptions: "Core strengthening, nerve mobilization exercises (nerve glides), and postural correction can help relieve pressure on the sciatic nerve.",
+        relatedGuideSlugs: ["core-strengthening-back-pain"],
+    },
+    {
+        id: 'rotator-cuff-tear',
+        name: "Rotator Cuff Tear",
+        slug: "rotator-cuff-tear",
+        description: "A tear in the tissues connecting muscle to bone (tendons) around the shoulder joint. It can cause a dull ache in the shoulder, which often worsens with use of the arm away from the body.",
+        treatmentOptions: "Physiotherapy focuses on restoring flexibility and strengthening the muscles surrounding the shoulder joint to compensate for the tear and improve shoulder function.",
+        relatedGuideSlugs: ["shoulder-mobility-exercises"],
     }
 ];
 

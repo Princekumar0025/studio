@@ -101,6 +101,24 @@
       "description": "Close up of a person stretching their ankle.",
       "imageUrl": "https://images.unsplash.com/photo-1616852402944-46937a1f55a1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhbmtsZSUyMHN0cmV0Y2h8ZW58MHx8fHwxNjk5ODczMjUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "ankle stretch"
+    },
+    {
+      "id": "hip-mobility-guide",
+      "description": "Woman doing a hip mobility stretch on a yoga mat.",
+      "imageUrl": "https://images.unsplash.com/photo-1599901860904-177698a39a90?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxoaXAlMjBzdHJldGNofGVufDB8fHx8MTY5OTg3MzIwMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "hip stretch"
+    },
+    {
+      "id": "knee-pain-guide",
+      "description": "Athlete performing a knee strengthening exercise.",
+      "imageUrl": "https://images.unsplash.com/photo-1574623450234-56b39e682025?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxrbmVlJTIwZXhlcmNpc2V8ZW58MHx8fHwxNjk5ODczMjUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "knee exercise"
+    },
+    {
+      "id": "wrist-stretches-guide",
+      "description": "Person stretching their wrist and hand.",
+      "imageUrl": "https://images.unsplash.com/photo-1620392189309-722e5a595736?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3cmlzdCUyMHN0cmV0Y2h8ZW58MHx8fHwxNjk5ODczMjUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wrist stretch"
     }
   ]
 }
