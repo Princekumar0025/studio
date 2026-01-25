@@ -98,14 +98,14 @@ export default function Home() {
     <div className="flex flex-col">
       {/* Hero Section */}
       <section
-        className="relative w-full h-[70vh] md:h-[80vh]"
+        className="relative w-full h-[70vh] md:h-[80vh] bg-black"
       >
         {heroImage && (
             <Image
                 src={heroImage.imageUrl}
                 alt={heroImage.description}
                 fill
-                className="object-cover object-center"
+                className="object-contain object-center"
                 data-ai-hint={heroImage.imageHint}
                 priority
             />
