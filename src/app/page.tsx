@@ -15,7 +15,7 @@ type Therapist = {
   id: string;
   name: string;
   title: string;
-  imageId: string;
+  imageUrl: string;
   specializations: string[];
 };
 
@@ -43,20 +43,19 @@ function MeetTheTeamSection() {
         return null; // Don't show the section if no therapists
     }
     
-    const featuredTherapist = therapists.find(t => t.imageId === 'caleb-burgess') || therapists[0];
+    // Using a known image URL from seed data for the featured therapist.
+    const featuredTherapist = therapists.find(t => t.imageUrl.includes('99371053-157c-473d-8b01-526487d60920')) || therapists[0];
     
     if (!featuredTherapist) {
         return null;
     }
 
-    const image = PlaceHolderImages.find(p => p.id === featuredTherapist.imageId);
-
     return (
         <div className="mt-12 flex justify-center">
             <div key={featuredTherapist.id} className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-background rounded-lg max-w-xl transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
-                {image && (
+                {featuredTherapist.imageUrl && (
                     <Avatar className="h-24 w-24">
-                    <AvatarImage src={image.imageUrl} alt={featuredTherapist.name} data-ai-hint={image.imageHint} />
+                    <AvatarImage src={featuredTherapist.imageUrl} alt={featuredTherapist.name} />
                     <AvatarFallback>{featuredTherapist.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                 )}

@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { type Product } from "@/lib/data";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
@@ -13,7 +12,6 @@ type ProductCardProps = {
 };
 
 export function ProductCard({ product }: ProductCardProps) {
-  const image = PlaceHolderImages.find((p) => p.id === product.imageId);
   const { toast } = useToast();
 
   const handleAddToCart = () => {
@@ -26,13 +24,12 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="flex flex-col overflow-hidden h-full">
       <div className="relative h-60 w-full overflow-hidden">
-        {image && (
+        {product.imageUrl && (
           <Image
-            src={image.imageUrl}
+            src={product.imageUrl}
             alt={product.name}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
-            data-ai-hint={image.imageHint}
           />
         )}
       </div>

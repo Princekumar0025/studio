@@ -4,7 +4,7 @@ export type Product = {
   name: string;
   description: string;
   price: number;
-  imageId: string;
+  imageUrl: string;
 };
 
 // The static data arrays have been removed and are now fetched from Firestore.

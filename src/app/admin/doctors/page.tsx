@@ -20,7 +20,6 @@ import {
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,7 +39,7 @@ type Therapist = {
   id: string;
   name: string;
   title: string;
-  imageId: string;
+  imageUrl: string;
 };
 
 function DoctorList() {
@@ -104,7 +103,6 @@ function DoctorList() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {therapists?.map((therapist) => {
-        const image = PlaceHolderImages.find((p) => p.id === therapist.imageId);
         return (
           <Card key={therapist.id}>
             <CardHeader>
@@ -113,7 +111,7 @@ function DoctorList() {
             </CardHeader>
             <CardContent>
               <Avatar className="h-24 w-24">
-                <AvatarImage src={image?.imageUrl} alt={therapist.name} />
+                <AvatarImage src={therapist.imageUrl} alt={therapist.name} />
                 <AvatarFallback>
                   {therapist.name
                     .split(' ')

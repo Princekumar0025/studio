@@ -20,7 +20,6 @@ import {
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,7 +39,7 @@ type Product = {
   id: string;
   name: string;
   price: number;
-  imageId: string;
+  imageUrl: string;
   description: string;
 };
 
@@ -99,12 +98,11 @@ function ProductList() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {products?.map((product) => {
-        const image = PlaceHolderImages.find((p) => p.id === product.imageId);
         return (
           <Card key={product.id} className="flex flex-col">
-            {image && (
+            {product.imageUrl && (
                 <div className="relative h-48 w-full">
-                    <Image src={image.imageUrl} alt={product.name} fill className="object-cover rounded-t-lg" />
+                    <Image src={product.imageUrl} alt={product.name} fill className="object-cover rounded-t-lg" />
                 </div>
             )}
             <CardHeader>

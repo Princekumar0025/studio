@@ -7,13 +7,12 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from "next/image";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 type TreatmentGuide = {
   id: string;
   title: string;
   description: string;
-  imageId: string;
+  imageUrl: string;
   slug: string;
 };
 
@@ -55,18 +54,16 @@ export default function GuidesPage() {
       {!isLoading && treatmentGuides && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {treatmentGuides.map((guide) => {
-                const image = PlaceHolderImages.find((p) => p.id === guide.imageId);
                 return (
                     <Link href={`/guides/${guide.slug}`} key={guide.id} className="group">
                         <Card className="h-full border-2 hover:border-primary hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden">
-                            {image && (
+                            {guide.imageUrl && (
                                 <div className="relative h-48 w-full">
                                     <Image
-                                        src={image.imageUrl}
+                                        src={guide.imageUrl}
                                         alt={guide.title}
                                         fill
                                         className="object-cover"
-                                        data-ai-hint={image.imageHint}
                                     />
                                 </div>
                             )}

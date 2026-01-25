@@ -8,7 +8,7 @@ const treatmentGuides = [
         title: "Gentle Neck Stretches",
         slug: "gentle-neck-stretches",
         description: "A series of simple stretches to relieve neck tension and improve flexibility.",
-        imageId: "neck-stretches-guide",
+        imageUrl: "https://images.unsplash.com/photo-1632482151560-ef0645f32999?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxuZWNrJTIwc3RyZXRjaHxlbnwwfHx8fDE3Njg0NTg5MzV8MA&ixlib=rb-4.1.0&q=80&w=1080",
         steps: [
             { title: "Neck Tilt", instructions: "Gently tilt your head to one side, holding for 15-30 seconds. Repeat on the other side." },
             { title: "Neck Turn", instructions: "Slowly turn your head to look over your shoulder, holding for 15-30 seconds. Repeat on the other side." },
@@ -20,7 +20,7 @@ const treatmentGuides = [
         title: "Core Strengthening for Back Pain",
         slug: "core-strengthening-back-pain",
         description: "Build a stronger core to support your lower back and reduce pain.",
-        imageId: "back-pain-guide",
+        imageUrl: "https://images.unsplash.com/photo-1683587023194-a24e5b6549b0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxiYWNrJTIwZXhlcmNpc2V8ZW58MHx8fHwxNzY4NDcxMjU0fDA&ixlib=rb-4.1.0&q=80&w=1080",
         steps: [
             { title: "Pelvic Tilt", instructions: "Lie on your back with knees bent. Flatten your back against the floor by tightening your abdominal muscles. Hold for 10 seconds." },
             { title: "Bridge", instructions: "Lie on your back with knees bent. Lift your hips off the floor until your knees, hips and shoulders form a straight line. Hold for 5 seconds." },
@@ -32,7 +32,7 @@ const treatmentGuides = [
         title: "Shoulder Mobility Exercises",
         slug: "shoulder-mobility-exercises",
         description: "Improve range of motion and reduce stiffness in your shoulders.",
-        imageId: "shoulder-exercises-guide",
+        imageUrl: "https://images.unsplash.com/photo-1599422552425-c60959328420?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzaG91bGRlciUyMGV4ZXJjaXNlfGVufDB8fHx8MTY5OTg3MzAwMHww&ixlib=rb-4.1.0&q=80&w=1080",
         steps: [
             { title: "Pendulum Swings", instructions: "Lean forward and support your body with one arm on a table. Let the other arm hang down and gently swing it in small circles. Repeat in both directions." },
             { title: "Wall Push-ups", instructions: "Stand facing a wall, about arm's length away. Place your hands on the wall slightly wider than your shoulders. Slowly bend your elbows and bring your body closer to the wall. Push back to the starting position." },
@@ -44,7 +44,7 @@ const treatmentGuides = [
         title: "Ankle Sprain Recovery",
         slug: "ankle-sprain-recovery",
         description: "Gentle exercises to regain strength and stability after an ankle sprain.",
-        imageId: "ankle-recovery-guide",
+        imageUrl: "https://images.unsplash.com/photo-1616852402944-46937a1f55a1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhbmtsZSUyMHN0cmV0Y2h8ZW58MHx8fHwxNjk5ODczMjUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
         steps: [
             { title: "Ankle Circles", instructions: "While seated, lift your foot off the ground and slowly rotate your ankle in a clockwise circle 10 times, then counter-clockwise 10 times." },
             { title: "Heel Raises", instructions: "Stand with your feet flat on the floor. Slowly raise your heels up as high as you can, then slowly lower them back down. Perform 10-15 repetitions." },
@@ -56,7 +56,7 @@ const treatmentGuides = [
         title: "Hip Mobility Drills",
         slug: "hip-mobility-drills",
         description: "Exercises to improve hip flexibility, reduce tightness, and increase range of motion.",
-        imageId: "hip-mobility-guide",
+        imageUrl: "https://images.unsplash.com/photo-1599901860904-177698a39a90?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxoaXAlMjBzdHJldGNofGVufDB8fHx8MTY5OTg3MzIwMHww&ixlib=rb-4.1.0&q=80&w=1080",
         steps: [
             { title: "Kneeling Hip Flexor Stretch", instructions: "Kneel on one knee with your other foot in front. Gently push your hips forward until you feel a stretch in the front of your hip. Hold for 30 seconds." },
             { title: "Pigeon Pose", instructions: "Start on all fours, bring one knee forward towards your wrist. Extend the other leg back. Sink your hips down, feeling a stretch in the glute. Hold for 30 seconds." },
@@ -68,7 +68,7 @@ const treatmentGuides = [
         title: "Knee Strengthening Basics",
         slug: "knee-strengthening-basics",
         description: "Fundamental exercises to build strength around the knee joint for better stability and pain reduction.",
-        imageId: "knee-pain-guide",
+        imageUrl: "https://images.unsplash.com/photo-1574623450234-56b39e682025?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxrbmVlJTIwZXhlcmNpc2V8ZW58MHx8fHwxNjk5ODczMjUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
         steps: [
             { title: "Quad Sets", instructions: "Sit on the floor with your injured leg straight. Tighten the muscle on the top of your thigh (quadriceps) by pressing the back of your knee into the floor. Hold for 5 seconds." },
             { title: "Straight Leg Raises", instructions: "Lie on your back with one leg straight and the other bent. Tighten the thigh muscle of the straight leg and lift it about 12 inches off the floor. Hold for 3-5 seconds, then slowly lower." },
@@ -80,7 +80,7 @@ const treatmentGuides = [
         title: "Wrist and Hand Stretches",
         slug: "wrist-and-hand-stretches",
         description: "Stretches to relieve pain and tension from repetitive strain, such as from typing or manual work.",
-        imageId: "wrist-stretches-guide",
+        imageUrl: "https://images.unsplash.com/photo-1620392189309-722e5a595736?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3cmlzdCUyMHN0cmV0Y2h8ZW58MHx8fHwxNjk5ODczMjUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
         steps: [
             { title: "Prayer Stretch", instructions: "Place your palms together in front of your chest. Slowly lower your hands towards your waistline, keeping your palms together, until you feel a moderate stretch in your forearms. Hold for 15-30 seconds." },
             { title: "Wrist Extensor Stretch", instructions: "Extend your arm in front of you with your palm down. With your other hand, gently bend your wrist down until you feel a stretch in the top of your forearm. Hold for 15-30 seconds." },
@@ -92,7 +92,7 @@ const treatmentGuides = [
         title: "Ergonomics for the Home Office",
         slug: "ergonomics-for-home-office",
         description: "Set up your workspace to prevent pain and improve posture while working from home.",
-        imageId: "service-3",
+        imageUrl: "https://images.unsplash.com/photo-1767611132085-167725b113ae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwb3N0dXJlJTIwY29ycmVjdGlvbnxlbnwwfHx8fDE3Njg0NzEyNTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
         steps: [
             { title: "Monitor Height", instructions: "Position your monitor so the top of the screen is at or slightly below eye level. Your eyes should look slightly downward when viewing the middle of the screen." },
             { title: "Chair Setup", instructions: "Adjust your chair height so your feet are flat on the floor and your knees are at or slightly below hip level. Your back should be fully supported." },
@@ -105,7 +105,7 @@ const treatmentGuides = [
         title: "Essential Stretches for Runners",
         slug: "stretching-for-runners",
         description: "Key dynamic and static stretches to improve flexibility and prevent common running injuries.",
-        imageId: "service-2",
+        imageUrl: "https://images.unsplash.com/photo-1759997725476-850059175ece?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzcG9ydHMlMjByZWhhYmlsaXRhdGlvbnxlbnwwfHx8fDE3Njg0NzEyNTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
         steps: [
             { title: "Dynamic Quad Stretch", instructions: "While standing, grab your right foot and pull it towards your glute, feeling a stretch in the front of your thigh. Hold for a few seconds, then switch sides. Do this while walking." },
             { title: "Hamstring Scoops", instructions: "Step forward with one leg, keeping it straight. Hinge at your hips and scoop your arms down towards your foot as you feel a stretch in your hamstring. Alternate legs." },

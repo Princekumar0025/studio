@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
@@ -14,7 +13,7 @@ type Therapist = {
   name: string;
   title: string;
   bio: string;
-  imageId: string;
+  imageUrl: string;
   specializations: string[];
 };
 
@@ -67,7 +66,6 @@ export default function TeamPage() {
       {!isLoading && therapists && (
         <div className="space-y-12">
             {therapists.map((therapist, index) => {
-            const image = PlaceHolderImages.find(p => p.id === therapist.imageId);
             const isReversed = index % 2 !== 0;
             return (
                 <Card key={therapist.id} className="overflow-hidden">
@@ -76,13 +74,12 @@ export default function TeamPage() {
                         'md:col-span-2 relative w-full h-80 md:h-full min-h-[300px]',
                          isReversed && 'md:order-last'
                     )}>
-                    {image && (
+                    {therapist.imageUrl && (
                         <Image
-                        src={image.imageUrl}
+                        src={therapist.imageUrl}
                         alt={therapist.name}
                         fill
                         className="object-cover"
-                        data-ai-hint={image.imageHint}
                         />
                     )}
                     </div>

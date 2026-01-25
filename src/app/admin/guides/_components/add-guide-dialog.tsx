@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -43,7 +43,7 @@ const formSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters.'),
   slug: z.string().min(2, 'Slug must be at least 2 characters.').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens.'),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
-  imageId: z.string().min(1, 'Image ID is required.'),
+  imageUrl: z.string().min(1, 'Image URL is required.'),
   videoUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   steps: z.array(stepSchema).min(1, 'At least one step is required.'),
 });
@@ -52,6 +52,7 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const firestore = useFirestore();
   const { toast } = useToast();
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -59,7 +60,7 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
       title: '',
       slug: '',
       description: '',
-      imageId: '',
+      imageUrl: '',
       videoUrl: '',
       steps: [{ title: '', instructions: '' }],
     },
@@ -77,6 +78,35 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
       .replace(/[^\w\s-]/g, '')
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '');
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+        toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Please select an image file.' });
+        return;
+    }
+
+    if (file.size > 500 * 1024) { // 500KB limit
+        toast({ variant: 'destructive', title: 'Image Too Large', description: 'Please select an image smaller than 500KB.' });
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const dataUri = e.target?.result as string;
+        form.setValue('imageUrl', dataUri);
+        toast({ title: 'Image Ready', description: 'The image has been prepared and will be saved with the guide.' });
+    };
+    reader.onerror = () => {
+        toast({ variant: 'destructive', title: 'Error Reading File', description: 'Could not read the selected file.' });
+    };
+    reader.readAsDataURL(file);
+
+    if (event.target) event.target.value = '';
+  };
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) return;
@@ -163,13 +193,26 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
             />
             <FormField
               control={form.control}
-              name="imageId"
+              name="imageUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image ID</FormLabel>
+                  <FormLabel>Image</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., neck-stretches-guide" {...field} />
+                    <div className="flex items-center gap-2">
+                        <Input placeholder="Enter URL or upload an image" {...field} />
+                        <Button type="button" variant="outline" onClick={() => imageInputRef.current?.click()}>Upload</Button>
+                        <input 
+                            type="file" 
+                            ref={imageInputRef} 
+                            className="hidden" 
+                            accept="image/*"
+                            onChange={handleFileSelect}
+                        />
+                    </div>
                   </FormControl>
+                  <FormDescription>
+                    Provide a URL or upload a small image (under 500KB).
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -254,5 +297,3 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
     </Dialog>
   );
 }
-
-    

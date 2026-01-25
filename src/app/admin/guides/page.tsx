@@ -34,7 +34,6 @@ import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Link from 'next/link';
 
 type GuideStep = {
@@ -46,7 +45,7 @@ type TreatmentGuide = {
   id: string;
   title: string;
   description: string;
-  imageId: string;
+  imageUrl: string;
   slug: string;
   steps: GuideStep[];
 };
@@ -114,12 +113,11 @@ function GuidesList() {
   return (
     <div className="space-y-6">
       {guides?.map((guide) => {
-        const image = PlaceHolderImages.find((p) => p.id === guide.imageId);
         return (
           <Card key={guide.id}>
-             {image && (
+             {guide.imageUrl && (
                 <div className="relative h-48 w-full">
-                    <Image src={image.imageUrl} alt={guide.title} fill className="object-cover rounded-t-lg" data-ai-hint={image.imageHint} />
+                    <Image src={guide.imageUrl} alt={guide.title} fill className="object-cover rounded-t-lg" />
                 </div>
             )}
             <CardHeader>

@@ -9,7 +9,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,7 +22,7 @@ type TreatmentGuide = {
   id: string;
   title: string;
   description: string;
-  imageId: string;
+  imageUrl: string;
   slug: string;
   steps: GuideStep[];
   videoUrl?: string;
@@ -90,21 +89,18 @@ function GuideContent({ slug }: { slug: string }) {
     if (!guide) {
         notFound();
     }
-    
-    const image = PlaceHolderImages.find((p) => p.id === guide.imageId);
 
     return (
         <div className="container py-12 md:py-20">
             <div className="max-w-4xl mx-auto">
                  <Card key={guide.id} className="overflow-hidden shadow-lg border-2">
                     <div className="relative h-64 md:h-96 w-full">
-                        {image && (
+                        {guide.imageUrl && (
                         <Image
-                            src={image.imageUrl}
+                            src={guide.imageUrl}
                             alt={guide.title}
                             fill
                             className="object-cover"
-                            data-ai-hint={image.imageHint}
                         />
                         )}
                     </div>
@@ -142,5 +138,3 @@ function GuideContent({ slug }: { slug: string }) {
 export default function GuidePage({ params }: GuidePageProps) {
     return <GuideContent slug={params.slug} />;
 }
-
-    
