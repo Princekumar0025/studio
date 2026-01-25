@@ -89,6 +89,18 @@
       "description": "A reusable hot and cold pack.",
       "imageUrl": "https://images.unsplash.com/photo-1766699624078-70f928b1fb04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxjb2xkJTIwcGFja3xlbnwwfHx8fDE3Njg1NDk2ODR8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "cold pack"
+    },
+    {
+      "id": "shoulder-exercises-guide",
+      "description": "Woman performing a shoulder stretch exercise.",
+      "imageUrl": "https://images.unsplash.com/photo-1599422552425-c60959328420?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzaG91bGRlciUyMGV4ZXJjaXNlfGVufDB8fHx8MTY5OTg3MzAwMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "shoulder exercise"
+    },
+    {
+      "id": "ankle-recovery-guide",
+      "description": "Close up of a person stretching their ankle.",
+      "imageUrl": "https://images.unsplash.com/photo-1616852402944-46937a1f55a1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhbmtsZSUyMHN0cmV0Y2h8ZW58MHx8fHwxNjk5ODczMjUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ankle stretch"
     }
   ]
 }
