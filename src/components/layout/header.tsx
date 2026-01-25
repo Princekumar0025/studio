@@ -130,7 +130,7 @@ export function Header() {
           <ThemeToggle />
           <UserNav />
           <Button variant="outline" size="icon" asChild>
-            <Link href="#">
+            <Link href="/store">
               <ShoppingCart className="h-4 w-4" />
               <span className="sr-only">Shopping Cart</span>
             </Link>

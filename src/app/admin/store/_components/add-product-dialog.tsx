@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc, setDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +14,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,6 +30,7 @@ import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -39,13 +39,30 @@ const formSchema = z.object({
   imageUrl: z.string().min(1, 'Image URL is required.'),
 });
 
-export function AddProductDialog({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+type ProductFormValues = z.infer<typeof formSchema>;
+
+export type Product = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+};
+
+interface ProductDialogProps {
+  product?: Product;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function ProductDialog({ product, open, onOpenChange }: ProductDialogProps) {
+  const isEditMode = !!product;
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const firestore = useFirestore();
   const { toast } = useToast();
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
@@ -54,6 +71,19 @@ export function AddProductDialog({ children }: { children: React.ReactNode }) {
       imageUrl: '',
     },
   });
+
+  useEffect(() => {
+    if (open && product) {
+        form.reset(product);
+    } else if (open && !product) {
+        form.reset({
+            name: '',
+            description: '',
+            price: 0,
+            imageUrl: '',
+        });
+    }
+  }, [open, product, form]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -83,37 +113,39 @@ export function AddProductDialog({ children }: { children: React.ReactNode }) {
     if (event.target) event.target.value = '';
   };
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: ProductFormValues) {
     if (!firestore) return;
+    setIsSubmitting(true);
     
-    const productsCollection = collection(firestore, 'products');
-
-    addDoc(productsCollection, values)
-      .then(() => {
-        toast({
-          title: 'Product Added',
-          description: `${values.name} has been added to the store.`,
-        });
-        form.reset();
-        setOpen(false);
-      })
-      .catch((error) => {
+    try {
+        if (isEditMode && product) {
+            const docRef = doc(firestore, 'products', product.id);
+            await setDoc(docRef, values);
+            toast({ title: 'Product Updated', description: `${values.name} has been updated.`});
+        } else {
+            const collectionRef = collection(firestore, 'products');
+            await addDoc(collectionRef, values);
+            toast({ title: 'Product Added', description: `${values.name} has been added.`});
+        }
+        onOpenChange(false);
+    } catch (error) {
+        const path = isEditMode && product ? `products/${product.id}` : 'products';
         const permissionError = new FirestorePermissionError({
-            path: productsCollection.path,
-            operation: 'create',
+            path: path,
+            operation: isEditMode ? 'update' : 'create',
             requestResourceData: values,
         });
         errorEmitter.emit('permission-error', permissionError);
-        console.error('Error adding document: ', error);
-      });
+    } finally {
+        setIsSubmitting(false);
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Product</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Product' : 'Add New Product'}</DialogTitle>
           <DialogDescription>
             Fill out the details below to add a new product to the store.
           </DialogDescription>
@@ -153,7 +185,7 @@ export function AddProductDialog({ children }: { children: React.ReactNode }) {
                 <FormItem>
                   <FormLabel>Price</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="24.99" {...field} />
+                    <Input type="number" step="0.01" placeholder="24.99" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -186,7 +218,13 @@ export function AddProductDialog({ children }: { children: React.ReactNode }) {
               )}
             />
             <DialogFooter>
-              <Button type="submit">Add Product</Button>
+               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+                  Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isEditMode ? 'Save Changes' : 'Add Product'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

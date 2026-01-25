@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc, setDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +14,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,6 +30,7 @@ import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -40,13 +40,31 @@ const formSchema = z.object({
   imageUrl: z.string().min(1, 'Image URL is required.'),
 });
 
-export function AddDoctorDialog({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+type DoctorFormValues = z.infer<typeof formSchema>;
+
+type Therapist = {
+  id: string;
+  name: string;
+  title: string;
+  bio: string;
+  imageUrl: string;
+  specializations: string[];
+};
+
+interface DoctorDialogProps {
+  doctor?: Therapist;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function DoctorDialog({ doctor, open, onOpenChange }: DoctorDialogProps) {
+  const isEditMode = !!doctor;
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const firestore = useFirestore();
   const { toast } = useToast();
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<DoctorFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
@@ -56,6 +74,20 @@ export function AddDoctorDialog({ children }: { children: React.ReactNode }) {
       imageUrl: '',
     },
   });
+  
+  useEffect(() => {
+    if (open && doctor) {
+        form.reset({
+            name: doctor.name,
+            title: doctor.title,
+            bio: doctor.bio,
+            specializations: doctor.specializations.join(', '),
+            imageUrl: doctor.imageUrl
+        });
+    } else if (open && !doctor) {
+        form.reset();
+    }
+  }, [open, doctor, form]);
   
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -86,44 +118,46 @@ export function AddDoctorDialog({ children }: { children: React.ReactNode }) {
   };
 
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: DoctorFormValues) {
     if (!firestore) return;
+    setIsSubmitting(true);
 
-    const newDoctor = {
+    const doctorData = {
       ...values,
-      specializations: values.specializations.split(',').map((s) => s.trim()),
+      specializations: values.specializations.split(',').map((s) => s.trim()).filter(Boolean),
     };
-
-    const therapistsCollection = collection(firestore, 'therapists');
     
-    addDoc(therapistsCollection, newDoctor)
-      .then(() => {
-        toast({
-          title: 'Doctor Added',
-          description: `${values.name} has been added to the team.`,
-        });
-        form.reset();
-        setOpen(false);
-      })
-      .catch((error) => {
+    try {
+        if (isEditMode && doctor) {
+            const docRef = doc(firestore, 'therapists', doctor.id);
+            await setDoc(docRef, doctorData);
+            toast({ title: 'Doctor Updated', description: `${values.name} has been updated.`});
+        } else {
+            const collectionRef = collection(firestore, 'therapists');
+            await addDoc(collectionRef, doctorData);
+            toast({ title: 'Doctor Added', description: `${values.name} has been added.`});
+        }
+        onOpenChange(false);
+    } catch (error) {
+        const path = isEditMode && doctor ? `therapists/${doctor.id}` : 'therapists';
         const permissionError = new FirestorePermissionError({
-            path: therapistsCollection.path,
-            operation: 'create',
-            requestResourceData: newDoctor,
+            path,
+            operation: isEditMode ? 'update' : 'create',
+            requestResourceData: doctorData
         });
         errorEmitter.emit('permission-error', permissionError);
-        console.error('Error adding document: ', error);
-      });
+    } finally {
+        setIsSubmitting(false);
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Doctor</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Doctor' : 'Add New Doctor'}</DialogTitle>
           <DialogDescription>
-            Fill out the details below to add a new doctor to the system.
+            Fill out the details below to manage a doctor in the system.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -207,7 +241,13 @@ export function AddDoctorDialog({ children }: { children: React.ReactNode }) {
               )}
             />
             <DialogFooter>
-              <Button type="submit">Add Doctor</Button>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+                    Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isEditMode ? 'Save Changes' : 'Add Doctor'}
+                </Button>
             </DialogFooter>
           </form>
         </Form>

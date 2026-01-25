@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc, setDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +14,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -48,14 +47,37 @@ const formSchema = z.object({
   steps: z.array(stepSchema).min(1, 'At least one step is required.'),
 });
 
-export function AddGuideDialog({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+type GuideFormValues = z.infer<typeof formSchema>;
+
+type GuideStep = {
+  title: string;
+  instructions: string;
+};
+
+type TreatmentGuide = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  imageUrl: string;
+  videoUrl?: string;
+  steps: GuideStep[];
+};
+
+interface GuideDialogProps {
+    guide?: TreatmentGuide;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}
+
+export function GuideDialog({ guide, open, onOpenChange }: GuideDialogProps) {
+  const isEditMode = !!guide;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const firestore = useFirestore();
   const { toast } = useToast();
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<GuideFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
@@ -71,6 +93,28 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
     control: form.control,
     name: "steps"
   });
+
+  useEffect(() => {
+    if (open && guide) {
+        form.reset({
+            title: guide.title,
+            slug: guide.slug,
+            description: guide.description,
+            imageUrl: guide.imageUrl,
+            videoUrl: guide.videoUrl || '',
+            steps: guide.steps,
+        });
+    } else if (open && !guide) {
+        form.reset({
+            title: '',
+            slug: '',
+            description: '',
+            imageUrl: '',
+            videoUrl: '',
+            steps: [{ title: '', instructions: '' }],
+        });
+    }
+  }, [open, guide, form]);
   
   const slugify = (str: string) =>
     str
@@ -109,41 +153,39 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
   };
 
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: GuideFormValues) {
     if (!firestore) return;
     setIsSubmitting(true);
-
-    const guidesCollection = collection(firestore, 'treatmentGuides');
     
-    addDoc(guidesCollection, values)
-      .then(() => {
-        toast({
-          title: 'Guide Added',
-          description: `${values.title} has been added.`,
-        });
-        form.reset();
-        setOpen(false);
-      })
-      .catch((error) => {
+    try {
+        if (isEditMode && guide) {
+            const docRef = doc(firestore, 'treatmentGuides', guide.id);
+            await setDoc(docRef, values);
+            toast({ title: 'Guide Updated', description: `${values.title} has been updated.` });
+        } else {
+            const collectionRef = collection(firestore, 'treatmentGuides');
+            await addDoc(collectionRef, values);
+            toast({ title: 'Guide Added', description: `${values.title} has been added.` });
+        }
+        onOpenChange(false);
+    } catch (error) {
+        const path = isEditMode && guide ? `treatmentGuides/${guide.id}` : 'treatmentGuides';
         const permissionError = new FirestorePermissionError({
-            path: guidesCollection.path,
-            operation: 'create',
+            path,
+            operation: isEditMode ? 'update' : 'create',
             requestResourceData: values,
         });
         errorEmitter.emit('permission-error', permissionError);
-        console.error('Error adding document: ', error);
-      })
-      .finally(() => {
+    } finally {
         setIsSubmitting(false);
-      });
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Treatment Guide</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Guide' : 'Add New Treatment Guide'}</DialogTitle>
           <DialogDescription>
             Fill out the details for the new treatment guide.
           </DialogDescription>
@@ -162,7 +204,9 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
                         {...field}
                         onChange={(e) => {
                             field.onChange(e);
-                            form.setValue('slug', slugify(e.target.value));
+                            if (!isEditMode) {
+                                form.setValue('slug', slugify(e.target.value));
+                            }
                         }}
                     />
                   </FormControl>
@@ -177,7 +221,7 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
                 <FormItem>
                   <FormLabel>URL Slug</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., gentle-neck-stretches" {...field} />
+                    <Input placeholder="e.g., gentle-neck-stretches" {...field} disabled={isEditMode} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -294,12 +338,12 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
             </Button>
             
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
                   Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Add Guide
+                 {isEditMode ? 'Save Changes' : 'Add Guide'}
               </Button>
             </DialogFooter>
           </form>

@@ -10,8 +10,8 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2 } from 'lucide-react';
-import { AddDoctorDialog } from './_components/add-doctor-dialog';
+import { PlusCircle, Trash2, Edit } from 'lucide-react';
+import { DoctorDialog } from './_components/add-doctor-dialog';
 import {
   collection,
   doc,
@@ -29,7 +29,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -39,7 +38,9 @@ type Therapist = {
   id: string;
   name: string;
   title: string;
+  bio: string;
   imageUrl: string;
+  specializations: string[];
 };
 
 function DoctorList() {
@@ -47,17 +48,36 @@ function DoctorList() {
   const { toast } = useToast();
   const therapistsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'therapists') : null, [firestore]);
   const { data: therapists, isLoading } = useCollection<Therapist>(therapistsCollection);
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
-  const handleDelete = (therapistId: string, therapistName: string) => {
-      if (!firestore) return;
-      const docRef = doc(firestore, 'therapists', therapistId);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<Therapist | undefined>(undefined);
+  const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
+  const [doctorToDelete, setDoctorToDelete] = useState<Therapist | null>(null);
+
+  const handleAddClick = () => {
+    setSelectedDoctor(undefined);
+    setDialogOpen(true);
+  };
+
+  const handleEditClick = (doctor: Therapist) => {
+    setSelectedDoctor(doctor);
+    setDialogOpen(true);
+  };
+
+  const handleDeleteClick = (doctor: Therapist) => {
+    setDoctorToDelete(doctor);
+    setDeleteAlertOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+      if (!firestore || !doctorToDelete) return;
+      const docRef = doc(firestore, 'therapists', doctorToDelete.id);
       
       deleteDoc(docRef)
         .then(() => {
             toast({
                 title: "Doctor Removed",
-                description: `${therapistName} has been removed from the team.`,
+                description: `${doctorToDelete.name} has been removed from the team.`,
             });
         })
         .catch((error) => {
@@ -66,10 +86,10 @@ function DoctorList() {
                 operation: 'delete',
             });
             errorEmitter.emit('permission-error', permissionError);
-            console.error("Error removing document: ", error);
         })
         .finally(() => {
-            setIsDeleting(null);
+            setDeleteAlertOpen(false);
+            setDoctorToDelete(null);
         });
   };
 
@@ -85,14 +105,10 @@ function DoctorList() {
             <CardContent>
               <div className="flex items-center gap-4">
                 <Skeleton className="h-24 w-24 rounded-full" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-24" />
-                </div>
               </div>
             </CardContent>
             <CardFooter>
-                 <Skeleton className="h-10 w-20" />
+                 <Skeleton className="h-10 w-full" />
             </CardFooter>
           </Card>
         ))}
@@ -101,71 +117,76 @@ function DoctorList() {
   }
 
   return (
+    <>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {therapists?.map((therapist) => {
         return (
-          <Card key={therapist.id}>
-            <CardHeader>
-              <CardTitle>{therapist.name}</CardTitle>
-              <CardDescription>{therapist.title}</CardDescription>
+          <Card key={therapist.id} className="flex flex-col">
+            <CardHeader className="flex-grow">
+              <div className="flex gap-4 items-center">
+                 <Avatar className="h-24 w-24">
+                    <AvatarImage src={therapist.imageUrl} alt={therapist.name} />
+                    <AvatarFallback>
+                    {therapist.name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')}
+                    </AvatarFallback>
+                </Avatar>
+                <div>
+                    <CardTitle>{therapist.name}</CardTitle>
+                    <CardDescription>{therapist.title}</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={therapist.imageUrl} alt={therapist.name} />
-                <AvatarFallback>
-                  {therapist.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')}
-                </AvatarFallback>
-              </Avatar>
-            </CardContent>
-            <CardFooter>
+            <CardFooter className="flex justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={() => handleEditClick(therapist)}>
+                    <Edit className="mr-2 h-4 w-4" /> Edit
+                </Button>
                <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" onClick={() => setIsDeleting(therapist.id)}>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
+                    <Button variant="destructive" size="icon" onClick={() => handleDeleteClick(therapist)}>
+                        <Trash2 className="h-4 w-4" />
                     </Button>
                 </AlertDialogTrigger>
-                {isDeleting === therapist.id && (
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete {therapist.name}'s profile.
-                        </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => setIsDeleting(null)}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(therapist.id, therapist.name)}>
-                            Continue
-                        </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                )}
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete {doctorToDelete?.name}'s profile.
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setDeleteAlertOpen(false)}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteConfirm}>
+                        Continue
+                    </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
                 </AlertDialog>
             </CardFooter>
           </Card>
         );
       })}
     </div>
+    <DoctorDialog open={dialogOpen} onOpenChange={setDialogOpen} doctor={selectedDoctor} />
+    </>
   );
 }
 
 export default function DoctorsAdminPage() {
+  const [dialogOpen, setDialogOpen] = useState(false);
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage Doctors</h1>
-        <AddDoctorDialog>
-          <Button>
+        <Button onClick={() => setDialogOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Doctor
-          </Button>
-        </AddDoctorDialog>
+        </Button>
       </div>
       <DoctorList />
+       <DoctorDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>
   );
 }

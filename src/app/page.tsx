@@ -43,8 +43,7 @@ function MeetTheTeamSection() {
         return null; // Don't show the section if no therapists
     }
     
-    // Using a known image URL from seed data for the featured therapist.
-    const featuredTherapist = therapists.find(t => t.imageUrl.includes('99371053-157c-473d-8b01-526487d60920')) || therapists[0];
+    const featuredTherapist = therapists[0];
     
     if (!featuredTherapist) {
         return null;
@@ -99,7 +98,7 @@ export default function Home() {
     <div className="flex flex-col">
       {/* Hero Section */}
       <section
-        className="relative w-full h-[70vh] md:h-[80vh] bg-black bg-contain bg-center bg-no-repeat"
+        className="relative w-full h-[70vh] md:h-[80vh] bg-cover bg-center"
         style={{
           backgroundImage: heroImage ? `url(${heroImage.imageUrl})` : 'none',
         }}
@@ -109,7 +108,7 @@ export default function Home() {
           <h1 className="font-headline text-5xl md:text-7xl font-bold max-w-3xl !leading-tight">
             Move Freely, Live Fully.
           </h1>
-          <p className="mt-4 max-w-xl text-lg text-muted-foreground">
+          <p className="mt-4 max-w-xl text-lg text-white/80">
             Expert physiotherapy to help you overcome injury, manage pain, and achieve your physical best.
           </p>
           <div className="mt-8">
@@ -133,7 +132,7 @@ export default function Home() {
           </div>
           <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {services.map((service, index) => (
-              <Card key={index} className="text-center flex flex-col items-center p-8 border-2">
+              <Card key={index} className="text-center flex flex-col items-center p-8 border-2 hover:shadow-xl hover:-translate-y-1 transition-all">
                 <div className="p-4 bg-primary/10 rounded-full">
                   {service.icon}
                 </div>

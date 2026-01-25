@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc, setDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +14,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,6 +30,7 @@ import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -40,12 +40,30 @@ const formSchema = z.object({
   relatedGuideSlugs: z.string().optional(),
 });
 
-export function AddConditionDialog({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+type ConditionFormValues = z.infer<typeof formSchema>;
+
+type Condition = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  treatmentOptions: string;
+  relatedGuideSlugs?: string[];
+};
+
+interface ConditionDialogProps {
+  condition?: Condition;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function ConditionDialog({ condition, open, onOpenChange }: ConditionDialogProps) {
+  const isEditMode = !!condition;
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<ConditionFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
@@ -56,6 +74,20 @@ export function AddConditionDialog({ children }: { children: React.ReactNode }) 
     },
   });
 
+  useEffect(() => {
+    if (open && condition) {
+      form.reset({
+        name: condition.name,
+        slug: condition.slug,
+        description: condition.description,
+        treatmentOptions: condition.treatmentOptions,
+        relatedGuideSlugs: condition.relatedGuideSlugs?.join(', ') || '',
+      });
+    } else if (open && !condition) {
+        form.reset();
+    }
+  }, [open, condition, form]);
+
   const slugify = (str: string) =>
     str
       .toLowerCase()
@@ -64,44 +96,46 @@ export function AddConditionDialog({ children }: { children: React.ReactNode }) 
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '');
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: ConditionFormValues) {
     if (!firestore) return;
-
-    const conditionsCollection = collection(firestore, 'conditions');
+    setIsSubmitting(true);
     
     const conditionData = {
         ...values,
         relatedGuideSlugs: values.relatedGuideSlugs?.split(',').map(s => s.trim()).filter(Boolean) || [],
     };
-
-    addDoc(conditionsCollection, conditionData)
-      .then((docRef) => {
-        toast({
-          title: 'Condition Added',
-          description: `${values.name} has been added.`,
-        });
-        form.reset();
-        setOpen(false);
-      })
-      .catch((error) => {
+    
+    try {
+        if (isEditMode && condition) {
+            const docRef = doc(firestore, 'conditions', condition.id);
+            await setDoc(docRef, conditionData);
+            toast({ title: 'Condition Updated', description: `${values.name} has been updated.` });
+        } else {
+            const collectionRef = collection(firestore, 'conditions');
+            await addDoc(collectionRef, conditionData);
+            toast({ title: 'Condition Added', description: `${values.name} has been added.` });
+        }
+        onOpenChange(false);
+    } catch (error) {
+        const path = isEditMode && condition ? `conditions/${condition.id}` : 'conditions';
         const permissionError = new FirestorePermissionError({
-            path: conditionsCollection.path,
-            operation: 'create',
+            path,
+            operation: isEditMode ? 'update' : 'create',
             requestResourceData: conditionData,
         });
         errorEmitter.emit('permission-error', permissionError);
-        console.error('Error adding document: ', error);
-      });
+    } finally {
+        setIsSubmitting(false);
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Condition</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Condition' : 'Add New Condition'}</DialogTitle>
           <DialogDescription>
-            Fill out the details for the new medical condition.
+            Fill out the details for the medical condition.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -118,7 +152,9 @@ export function AddConditionDialog({ children }: { children: React.ReactNode }) 
                       {...field}
                       onChange={(e) => {
                         field.onChange(e);
-                        form.setValue('slug', slugify(e.target.value));
+                        if (!isEditMode) {
+                            form.setValue('slug', slugify(e.target.value));
+                        }
                       }}
                     />
                   </FormControl>
@@ -133,7 +169,7 @@ export function AddConditionDialog({ children }: { children: React.ReactNode }) 
                 <FormItem>
                   <FormLabel>URL Slug</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., plantar-fasciitis" {...field} />
+                    <Input placeholder="e.g., plantar-fasciitis" {...field} disabled={isEditMode} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -182,7 +218,13 @@ export function AddConditionDialog({ children }: { children: React.ReactNode }) 
               )}
             />
             <DialogFooter>
-              <Button type="submit">Add Condition</Button>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+                    Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isEditMode ? 'Save Changes' : 'Add Condition'}
+                </Button>
             </DialogFooter>
           </form>
         </Form>
