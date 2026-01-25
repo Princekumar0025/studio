@@ -34,8 +34,8 @@ import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const stepSchema = z.object({
-  title: z.string().min(2, 'Step title must be at least 2 characters.'),
-  instructions: z.string().min(10, 'Instructions must be at least 10 characters.'),
+  title: z.string(),
+  instructions: z.string(),
 });
 
 const formSchema = z.object({
@@ -155,28 +155,56 @@ export function GuideDialog({ guide, open, onOpenChange }: GuideDialogProps) {
   };
 
 
-  function onSubmit(values: GuideFormValues) {
-    if (!firestore) return;
+  async function onSubmit(values: GuideFormValues) {
+    if (!firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Firestore is not initialized. Please try again later.',
+      });
+      return;
+    }
+
+    const validSteps = values.steps.filter(
+      step => step.title.trim() !== '' && step.instructions.trim() !== ''
+    );
+
+    if (validSteps.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "At least one complete step is required.",
+        description: "Please fill in the title and instructions for at least one step.",
+      });
+      return;
+    }
+    
+    const guideData = {
+        ...values,
+        steps: validSteps,
+    };
+
     setIsSubmitting(true);
-    
     const operation = isEditMode ? 'update' : 'create';
-    const promise = isEditMode && guide
-        ? setDoc(doc(firestore, 'treatmentGuides', guide.id), values)
-        : addDoc(collection(firestore, 'treatmentGuides'), values);
-    
-    promise.then(() => {
+
+    try {
+        if (isEditMode && guide) {
+            await setDoc(doc(firestore, 'treatmentGuides', guide.id), guideData);
+        } else {
+            await addDoc(collection(firestore, 'treatmentGuides'), guideData);
+        }
+
         toast({ 
             title: `Guide ${isEditMode ? 'Updated' : 'Added'}`,
             description: `"${values.title}" has been successfully ${isEditMode ? 'updated' : 'added'}.`
         });
         onOpenChange(false);
-    }).catch((error) => {
+    } catch (error) {
         console.error(`Failed to ${operation} guide:`, error);
         const path = isEditMode && guide ? `treatmentGuides/${guide.id}` : 'treatmentGuides';
         const permissionError = new FirestorePermissionError({
             path,
             operation,
-            requestResourceData: values,
+            requestResourceData: guideData,
         });
         errorEmitter.emit('permission-error', permissionError);
         toast({
@@ -184,9 +212,9 @@ export function GuideDialog({ guide, open, onOpenChange }: GuideDialogProps) {
             title: `Failed to ${operation} guide`,
             description: "An error occurred. Please check your permissions and try again.",
         });
-    }).finally(() => {
+    } finally {
         setIsSubmitting(false);
-    });
+    }
   }
 
   return (
