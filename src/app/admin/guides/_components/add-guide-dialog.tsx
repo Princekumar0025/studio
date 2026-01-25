@@ -40,6 +40,7 @@ const stepSchema = z.object({
 
 const formSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters.'),
+  slug: z.string().min(2, 'Slug must be at least 2 characters.').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens.'),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   imageId: z.string().min(1, 'Image ID is required.'),
   steps: z.array(stepSchema).min(1, 'At least one step is required.'),
@@ -54,6 +55,7 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
+      slug: '',
       description: '',
       imageId: '',
       steps: [{ title: '', instructions: '' }],
@@ -64,6 +66,14 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
     control: form.control,
     name: "steps"
   });
+  
+  const slugify = (str: string) =>
+    str
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) return;
@@ -109,7 +119,27 @@ export function AddGuideDialog({ children }: { children: React.ReactNode }) {
                 <FormItem>
                   <FormLabel>Guide Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Gentle Neck Stretches" {...field} />
+                    <Input 
+                        placeholder="e.g., Gentle Neck Stretches" 
+                        {...field}
+                        onChange={(e) => {
+                            field.onChange(e);
+                            form.setValue('slug', slugify(e.target.value));
+                        }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="slug"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL Slug</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., gentle-neck-stretches" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

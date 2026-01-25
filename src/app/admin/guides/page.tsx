@@ -35,6 +35,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import Link from 'next/link';
 
 type GuideStep = {
   title: string;
@@ -46,6 +47,7 @@ type TreatmentGuide = {
   title: string;
   description: string;
   imageId: string;
+  slug: string;
   steps: GuideStep[];
 };
 
@@ -135,6 +137,9 @@ function GuidesList() {
                 </ol>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
+                <Button asChild variant="outline" size="sm">
+                    <Link href={`/guides/${guide.slug}`} target="_blank">View</Link>
+                </Button>
                <AlertDialog>
                 <AlertDialogTrigger asChild>
                     <Button variant="destructive" size="sm" onClick={() => setIsDeleting(guide.id)}>

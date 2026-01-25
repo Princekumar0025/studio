@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -36,6 +37,7 @@ const formSchema = z.object({
   slug: z.string().min(2, 'Slug must be at least 2 characters.').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens.'),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   treatmentOptions: z.string().min(10, 'Treatment options must be at least 10 characters.'),
+  relatedGuideSlugs: z.string().optional(),
 });
 
 export function AddConditionDialog({ children }: { children: React.ReactNode }) {
@@ -50,6 +52,7 @@ export function AddConditionDialog({ children }: { children: React.ReactNode }) 
       slug: '',
       description: '',
       treatmentOptions: '',
+      relatedGuideSlugs: '',
     },
   });
 
@@ -66,7 +69,12 @@ export function AddConditionDialog({ children }: { children: React.ReactNode }) 
 
     const conditionsCollection = collection(firestore, 'conditions');
     
-    addDoc(conditionsCollection, values)
+    const conditionData = {
+        ...values,
+        relatedGuideSlugs: values.relatedGuideSlugs?.split(',').map(s => s.trim()).filter(Boolean) || [],
+    };
+
+    addDoc(conditionsCollection, conditionData)
       .then((docRef) => {
         toast({
           title: 'Condition Added',
@@ -79,7 +87,7 @@ export function AddConditionDialog({ children }: { children: React.ReactNode }) 
         const permissionError = new FirestorePermissionError({
             path: conditionsCollection.path,
             operation: 'create',
-            requestResourceData: values,
+            requestResourceData: conditionData,
         });
         errorEmitter.emit('permission-error', permissionError);
         console.error('Error adding document: ', error);
@@ -153,6 +161,22 @@ export function AddConditionDialog({ children }: { children: React.ReactNode }) 
                   <FormControl>
                     <Textarea placeholder="Summary of available physiotherapy treatment options." {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="relatedGuideSlugs"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Related Guide Slugs</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="gentle-neck-stretches, back-pain-exercises" {...field} />
+                  </FormControl>
+                   <FormDescription>
+                    Comma-separated list of URL slugs for related treatment guides.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

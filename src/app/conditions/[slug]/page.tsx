@@ -2,13 +2,14 @@
 
 import { notFound } from 'next/navigation';
 import { summarizeCondition, SummarizeConditionOutput } from '@/ai/flows/ai-condition-summaries';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { Info, ArrowRight } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
 
 type Condition = {
   id: string;
@@ -16,6 +17,14 @@ type Condition = {
   slug: string;
   description: string;
   treatmentOptions: string;
+  relatedGuideSlugs?: string[];
+};
+
+type TreatmentGuide = {
+  id: string;
+  title: string;
+  slug: string;
+  imageId: string;
 };
 
 type ConditionPageProps = {
@@ -81,7 +90,15 @@ function PageContent({ slug }: { slug: string }) {
     const { data: conditions, isLoading } = useCollection<Condition>(conditionQuery);
     const condition = conditions?.[0];
 
-    if (isLoading) {
+    const guidesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'treatmentGuides') : null, [firestore]);
+    const { data: allGuides, isLoading: guidesLoading } = useCollection<TreatmentGuide>(guidesCollection);
+    
+    const relatedGuides = useMemo(() => {
+        if (!condition?.relatedGuideSlugs || !allGuides) return [];
+        return allGuides.filter(guide => condition.relatedGuideSlugs!.includes(guide.slug));
+    }, [condition, allGuides]);
+
+    if (isLoading || guidesLoading) {
         return (
              <div className="container py-12 md:py-20">
                 <div className="max-w-3xl mx-auto">
@@ -118,6 +135,30 @@ function PageContent({ slug }: { slug: string }) {
                     </CardHeader>
                     <ConditionSummary conditionName={condition.name} />
                 </Card>
+
+                {relatedGuides.length > 0 && (
+                    <Card className="mt-8 p-6 md:p-8 shadow-lg border-2">
+                        <CardHeader className="p-0">
+                            <CardTitle className="font-headline text-2xl">Related Treatment Guides</CardTitle>
+                            <CardDescription className="pt-2">Follow these exercises to help with your recovery.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-0 pt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {relatedGuides.map(guide => (
+                                <Link href={`/guides/${guide.slug}`} key={guide.id} className="group">
+                                    <Card className="h-full border-2 hover:border-primary p-4">
+                                        <CardHeader className="p-0">
+                                            <CardTitle className="text-lg">{guide.title}</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="p-0 pt-2">
+                                        <span className="text-sm font-semibold text-primary group-hover:underline">View Guide</span>
+                                        <ArrowRight className="inline ml-1 h-4 w-4 text-primary transform transition-transform group-hover:translate-x-1" />
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+                            ))}
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </div>
     );

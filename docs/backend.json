@@ -166,6 +166,13 @@
         "treatmentOptions": {
           "type": "string",
           "description": "Summary of available physiotherapy treatment options."
+        },
+        "relatedGuideSlugs": {
+          "type": "array",
+          "description": "A list of slugs for related treatment guides.",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": [
@@ -184,6 +191,10 @@
         "title": {
           "type": "string",
           "description": "The title of the treatment guide."
+        },
+        "slug": {
+          "type": "string",
+          "description": "URL-friendly slug for the guide."
         },
         "description": {
           "type": "string",
@@ -217,6 +228,7 @@
       },
       "required": [
         "title",
+        "slug",
         "description",
         "imageId",
         "steps"

@@ -1,50 +1,39 @@
 'use client';
 
-import Image from "next/image";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
+import Link from "next/link";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ArrowRight } from "lucide-react";
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-
-type GuideStep = {
-  title: string;
-  instructions: string;
-};
+import Image from "next/image";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 type TreatmentGuide = {
   id: string;
   title: string;
   description: string;
   imageId: string;
-  steps: GuideStep[];
+  slug: string;
 };
 
-
-function GuideLoadingSkeleton() {
+function GuidesLoadingSkeleton() {
     return (
-        <div className="space-y-12 max-w-4xl mx-auto">
-            {[...Array(2)].map((_, i) => (
-                <Card key={i} className="overflow-hidden shadow-lg border-2">
-                    <Skeleton className="h-64 w-full" />
-                    <CardHeader className="p-6">
-                        <Skeleton className="h-8 w-3/4" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[...Array(4)].map((_, i) => (
+                <Card key={i} className="h-full border-2 flex flex-col justify-between overflow-hidden">
+                    <Skeleton className="h-48 w-full" />
+                    <CardHeader>
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-full mt-2" />
                     </CardHeader>
-                    <CardContent className="px-6 pb-6 space-y-4">
-                        <Skeleton className="h-5 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                    </CardContent>
+                    <div className="p-6 pt-0 flex justify-end items-center">
+                        <Skeleton className="h-5 w-24" />
+                    </div>
                 </Card>
             ))}
         </div>
-    )
+    );
 }
 
 export default function GuidesPage() {
@@ -61,45 +50,37 @@ export default function GuidesPage() {
         </p>
       </div>
 
-      {isLoading && <GuideLoadingSkeleton />}
+      {isLoading && <GuidesLoadingSkeleton />}
 
       {!isLoading && treatmentGuides && (
-        <div className="space-y-12 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {treatmentGuides.map((guide) => {
-            const image = PlaceHolderImages.find((p) => p.id === guide.imageId);
-            return (
-                <Card key={guide.id} className="overflow-hidden shadow-lg border-2">
-                <div className="relative h-64 w-full">
-                    {image && (
-                    <Image
-                        src={image.imageUrl}
-                        alt={guide.title}
-                        fill
-                        className="object-cover"
-                        data-ai-hint={image.imageHint}
-                    />
-                    )}
-                </div>
-                <CardHeader className="p-6">
-                    <CardTitle className="font-headline text-2xl">{guide.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="px-6 pb-6">
-                    <p className="text-muted-foreground mb-4">{guide.description}</p>
-                    <Accordion type="single" collapsible className="w-full">
-                    {guide.steps.map((step, index) => (
-                        <AccordionItem key={index} value={`item-${index}`}>
-                        <AccordionTrigger className="font-semibold text-left">
-                            Step {index + 1}: {step.title}
-                        </AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground">
-                            {step.instructions}
-                        </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                    </Accordion>
-                </CardContent>
-                </Card>
-            );
+                const image = PlaceHolderImages.find((p) => p.id === guide.imageId);
+                return (
+                    <Link href={`/guides/${guide.slug}`} key={guide.id} className="group">
+                        <Card className="h-full border-2 hover:border-primary hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden">
+                            {image && (
+                                <div className="relative h-48 w-full">
+                                    <Image
+                                        src={image.imageUrl}
+                                        alt={guide.title}
+                                        fill
+                                        className="object-cover"
+                                        data-ai-hint={image.imageHint}
+                                    />
+                                </div>
+                            )}
+                            <CardHeader>
+                                <CardTitle className="font-headline text-xl">{guide.title}</CardTitle>
+                                <CardDescription>{guide.description}</CardDescription>
+                            </CardHeader>
+                            <div className="p-6 pt-0 mt-auto flex justify-end items-center">
+                                <span className="text-sm font-semibold text-primary group-hover:underline">View Guide</span>
+                                <ArrowRight className="ml-2 h-4 w-4 text-primary transform transition-transform group-hover:translate-x-1" />
+                            </div>
+                        </Card>
+                    </Link>
+                );
             })}
         </div>
       )}
