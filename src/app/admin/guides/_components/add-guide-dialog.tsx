@@ -34,8 +34,8 @@ import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const stepSchema = z.object({
-  title: z.string(),
-  instructions: z.string(),
+  title: z.string().min(1, 'Step title cannot be empty.'),
+  instructions: z.string().min(1, 'Step instructions cannot be empty.'),
 });
 
 const formSchema = z.object({
@@ -166,25 +166,7 @@ export function GuideDialog({ guide, open, onOpenChange }: GuideDialogProps) {
     }
     
     setIsSubmitting(true);
-
-    const validSteps = values.steps.filter(
-      step => step.title.trim() !== '' && step.instructions.trim() !== ''
-    );
-
-    if (validSteps.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'At least one complete step is required.',
-        description: 'Please fill in the title and instructions for at least one step.',
-      });
-      setIsSubmitting(false); // Reset button state
-      return;
-    }
-
-    const guideData = {
-      ...values,
-      steps: validSteps,
-    };
+    const guideData = { ...values };
 
     const operation = isEditMode ? 'update' : 'create';
     const promise = isEditMode && guide
