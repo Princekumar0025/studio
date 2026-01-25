@@ -170,23 +170,14 @@ export function GuideDialog({ guide, open, onOpenChange }: GuideDialogProps) {
             toast({ title: 'Guide Added', description: `${values.title} has been added.` });
         }
         onOpenChange(false);
-    } catch (error: any) {
-        console.error("Failed to save guide:", error);
-        if (error.code === 'permission-denied') {
-            const path = isEditMode && guide ? `treatmentGuides/${guide.id}` : 'treatmentGuides';
-            const permissionError = new FirestorePermissionError({
-                path,
-                operation: isEditMode ? 'update' : 'create',
-                requestResourceData: values,
-            });
-            errorEmitter.emit('permission-error', permissionError);
-        } else {
-            toast({
-                variant: 'destructive',
-                title: 'Operation Failed',
-                description: error.message || 'An unexpected error occurred. Please try again.',
-            });
-        }
+    } catch (error) {
+        const path = isEditMode && guide ? `treatmentGuides/${guide.id}` : 'treatmentGuides';
+        const permissionError = new FirestorePermissionError({
+            path,
+            operation: isEditMode ? 'update' : 'create',
+            requestResourceData: values,
+        });
+        errorEmitter.emit('permission-error', permissionError);
     } finally {
         setIsSubmitting(false);
     }
