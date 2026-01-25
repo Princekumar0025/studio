@@ -95,24 +95,26 @@ export function GuideDialog({ guide, open, onOpenChange }: GuideDialogProps) {
   });
 
   useEffect(() => {
-    if (open && guide) {
-        form.reset({
-            title: guide.title,
-            slug: guide.slug,
-            description: guide.description,
-            imageUrl: guide.imageUrl,
-            videoUrl: guide.videoUrl || '',
-            steps: guide.steps,
-        });
-    } else if (open && !guide) {
-        form.reset({
-            title: '',
-            slug: '',
-            description: '',
-            imageUrl: '',
-            videoUrl: '',
-            steps: [{ title: '', instructions: '' }],
-        });
+    if (open) {
+        if (guide) {
+            form.reset({
+                title: guide.title,
+                slug: guide.slug,
+                description: guide.description,
+                imageUrl: guide.imageUrl,
+                videoUrl: guide.videoUrl || '',
+                steps: guide.steps,
+            });
+        } else {
+            form.reset({
+                title: '',
+                slug: '',
+                description: '',
+                imageUrl: '',
+                videoUrl: '',
+                steps: [{ title: '', instructions: '' }],
+            });
+        }
     }
   }, [open, guide, form]);
   
@@ -168,14 +170,23 @@ export function GuideDialog({ guide, open, onOpenChange }: GuideDialogProps) {
             toast({ title: 'Guide Added', description: `${values.title} has been added.` });
         }
         onOpenChange(false);
-    } catch (error) {
-        const path = isEditMode && guide ? `treatmentGuides/${guide.id}` : 'treatmentGuides';
-        const permissionError = new FirestorePermissionError({
-            path,
-            operation: isEditMode ? 'update' : 'create',
-            requestResourceData: values,
-        });
-        errorEmitter.emit('permission-error', permissionError);
+    } catch (error: any) {
+        console.error("Failed to save guide:", error);
+        if (error.code === 'permission-denied') {
+            const path = isEditMode && guide ? `treatmentGuides/${guide.id}` : 'treatmentGuides';
+            const permissionError = new FirestorePermissionError({
+                path,
+                operation: isEditMode ? 'update' : 'create',
+                requestResourceData: values,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Operation Failed',
+                description: error.message || 'An unexpected error occurred. Please try again.',
+            });
+        }
     } finally {
         setIsSubmitting(false);
     }
