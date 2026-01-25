@@ -86,6 +86,32 @@ const treatmentGuides = [
             { title: "Wrist Extensor Stretch", instructions: "Extend your arm in front of you with your palm down. With your other hand, gently bend your wrist down until you feel a stretch in the top of your forearm. Hold for 15-30 seconds." },
             { title: "Wrist Flexor Stretch", instructions: "Extend your arm in front of you with your palm up. With your other hand, gently bend your wrist down until you feel a stretch in the bottom of your forearm. Hold for 15-30 seconds." }
         ]
+    },
+    {
+        id: 'ergonomics-for-home-office',
+        title: "Ergonomics for the Home Office",
+        slug: "ergonomics-for-home-office",
+        description: "Set up your workspace to prevent pain and improve posture while working from home.",
+        imageId: "service-3",
+        steps: [
+            { title: "Monitor Height", instructions: "Position your monitor so the top of the screen is at or slightly below eye level. Your eyes should look slightly downward when viewing the middle of the screen." },
+            { title: "Chair Setup", instructions: "Adjust your chair height so your feet are flat on the floor and your knees are at or slightly below hip level. Your back should be fully supported." },
+            { title: "Keyboard and Mouse", instructions: "Place your keyboard and mouse close enough to prevent reaching. Your elbows should be at a 90-degree angle when typing." },
+            { title: "Take Breaks", instructions: "Take a 5-10 minute break every hour to stand up, stretch, and move around." }
+        ]
+    },
+    {
+        id: 'stretching-for-runners',
+        title: "Essential Stretches for Runners",
+        slug: "stretching-for-runners",
+        description: "Key dynamic and static stretches to improve flexibility and prevent common running injuries.",
+        imageId: "service-2",
+        steps: [
+            { title: "Dynamic Quad Stretch", instructions: "While standing, grab your right foot and pull it towards your glute, feeling a stretch in the front of your thigh. Hold for a few seconds, then switch sides. Do this while walking." },
+            { title: "Hamstring Scoops", instructions: "Step forward with one leg, keeping it straight. Hinge at your hips and scoop your arms down towards your foot as you feel a stretch in your hamstring. Alternate legs." },
+            { title: "Static Calf Stretch", instructions: "Stand facing a wall with your hands on it for support. Step one foot back, keeping the leg straight and heel on the ground. Hold for 30 seconds." },
+            { title: "Glute Stretch (Figure-Four)", instructions: "Lie on your back and cross one ankle over the opposite knee. Gently pull the bottom leg towards your chest until you feel a stretch in your glute. Hold for 30 seconds." }
+        ]
     }
 ];
 
@@ -96,7 +122,7 @@ const conditions = [
         slug: "neck-pain",
         description: "Pain anywhere from the bottom of your head to the top of your shoulders. Often caused by poor posture, muscle strain, or underlying medical issues.",
         treatmentOptions: "Treatment often involves manual therapy, gentle stretching, and strengthening exercises to improve posture and reduce strain on the neck muscles.",
-        relatedGuideSlugs: ["gentle-neck-stretches"],
+        relatedGuideSlugs: ["gentle-neck-stretches", "ergonomics-for-home-office"],
     },
     {
         id: 'lower-back-pain',
@@ -136,7 +162,7 @@ const conditions = [
         slug: "tennis-elbow",
         description: "An overuse and muscle strain injury. The condition occurs when tendons in your elbow are overloaded, usually by repetitive motions of the wrist and arm.",
         treatmentOptions: "Treatment includes rest, wrist and forearm strengthening exercises, and education on activity modification to prevent recurrence.",
-        relatedGuideSlugs: [],
+        relatedGuideSlugs: ["wrist-and-hand-stretches"],
     },
     {
         id: 'runners-knee',
@@ -144,7 +170,7 @@ const conditions = [
         slug: "runners-knee",
         description: "A dull pain around the front of the knee (patella), where it connects with the lower end of the thighbone (femur). It's common in athletes and active individuals.",
         treatmentOptions: "Focuses on strengthening the quadriceps and hip muscles to improve knee tracking, along with stretching and activity modification.",
-        relatedGuideSlugs: ["knee-strengthening-basics"],
+        relatedGuideSlugs: ["knee-strengthening-basics", "stretching-for-runners"],
     },
     {
         id: 'hip-impingement',
@@ -160,7 +186,7 @@ const conditions = [
         slug: "carpal-tunnel-syndrome",
         description: "A condition that causes numbness, tingling, or weakness in your hand. It happens because of pressure on your median nerve, which runs the length of your arm and goes through a passage in your wrist called the carpal tunnel.",
         treatmentOptions: "Treatment can include wrist splinting, nerve gliding exercises, and ergonomic adjustments to reduce pressure on the nerve.",
-        relatedGuideSlugs: ["wrist-and-hand-stretches"],
+        relatedGuideSlugs: ["wrist-and-hand-stretches", "ergonomics-for-home-office"],
     },
     {
         id: 'sciatica',
@@ -177,6 +203,30 @@ const conditions = [
         description: "A tear in the tissues connecting muscle to bone (tendons) around the shoulder joint. It can cause a dull ache in the shoulder, which often worsens with use of the arm away from the body.",
         treatmentOptions: "Physiotherapy focuses on restoring flexibility and strengthening the muscles surrounding the shoulder joint to compensate for the tear and improve shoulder function.",
         relatedGuideSlugs: ["shoulder-mobility-exercises"],
+    },
+    {
+        id: 'shin-splints',
+        name: "Shin Splints",
+        slug: "shin-splints",
+        description: "Pain along the inner edge of the shinbone (tibia). It's a common overuse injury, especially for runners.",
+        treatmentOptions: "Rest, ice, and gentle calf stretching are key initial treatments. This is often followed by strengthening the muscles of the lower leg and improving running form.",
+        relatedGuideSlugs: ["stretching-for-runners"],
+    },
+    {
+        id: 'achilles-tendinopathy',
+        name: "Achilles Tendinopathy",
+        slug: "achilles-tendinopathy",
+        description: "An overuse injury of the Achilles tendon, the band of tissue that connects calf muscles at the back of the lower leg to your heel bone.",
+        treatmentOptions: "Treatment focuses on eccentric strengthening exercises for the calf, such as heel drops, along with load management and stretching.",
+        relatedGuideSlugs: ["stretching-for-runners"],
+    },
+    {
+        id: 'tension-headaches',
+        name: "Tension Headaches",
+        slug: "tension-headaches",
+        description: "The most common type of headache, often described as a constant ache or pressure around the head, especially at the temples or back of the head and neck.",
+        treatmentOptions: "Physiotherapy can help by addressing muscle tension in the neck and upper back through manual therapy, posture correction, and specific stretching and strengthening exercises.",
+        relatedGuideSlugs: ["gentle-neck-stretches", "ergonomics-for-home-office"],
     }
 ];
 
